@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.venv/
+**/__pycache__/
+*.pyc
+*.map
+.DS_Store
+归档.zip

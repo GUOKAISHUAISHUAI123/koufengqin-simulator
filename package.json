@@ -1,0 +1,47 @@
+{
+  "name": "koufengqin-simulator",
+  "productName": "口风琴模拟",
+  "version": "1.0.0",
+  "description": "口风琴模拟与透明跟谱窗",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "pack:mac": "electron-builder --mac dir"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "local.koufengqin.simulator",
+    "productName": "口风琴模拟",
+    "files": [
+      "index.html",
+      "electron/**",
+      "node_modules/koffi/**"
+    ],
+    "asarUnpack": [
+      "node_modules/koffi/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dir"
+      ],
+      "identity": null
+    }
+  },
+  "allowScripts": {
+    "electron": true,
+    "electron-winstaller": true,
+    "koffi@3.2.1": true
+  },
+  "dependencies": {
+    "koffi": "^3.2.1"
+  }
+}
