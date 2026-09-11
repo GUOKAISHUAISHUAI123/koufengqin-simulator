@@ -20,6 +20,9 @@
     "files": [
       "index.html",
       "electron/**",
+      "library/**",
+      "AGENTS.md",
+      "README.md",
       "node_modules/koffi/**"
     ],
     "asarUnpack": [
