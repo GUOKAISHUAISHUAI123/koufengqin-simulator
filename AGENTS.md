@@ -31,7 +31,7 @@
 2. 按住约 0.62–0.96 倍时值（开了 humanize）  
 3. 音键 up → 等 **20ms** → 鼠标 up  
 4. 相邻音同一修饰键则鼠标保持按住，不要 0ms 松开再按下  
-5. 开始前 **3 秒倒计时** 切到游戏；**F8** 停止并 panic 松开全部键鼠  
+5. 开始前 **3 秒倒计时** 切到游戏；**`/` 或 `?`** 暂停/继续；**F9**（或 F8）停止并 panic 松开全部键鼠  
 6. 可选「结束按 Q」给 NPC 听旋律提交  
 
 Windows：`SendInput` + **scancode**（`electron/input-driver.cjs`）。Mac：CoreGraphics。游戏以管理员运行时，本工具也要管理员，否则 UIPI 丢掉按键。
@@ -50,7 +50,7 @@ Windows：`SendInput` + **scancode**（`electron/input-driver.cjs`）。Mac：Co
 | `library/default-library.json` | 可导入的默认曲库（导出格式 `{ app, version, library }`） |
 | `tools/` | 从音视频/简谱生成 events |
 
-跟谱窗模式：`follow`（跟弹自动滚轴）、`practice`（按对才滚）、`autoplay`（代按）。练习在 overlay **只校验音键**，不要求真按鼠标（点窗口曾误设 left 导致全 miss）。跟谱窗用 `event.code`（KeyZ…Comma）+ `before-input-event`，避开中文 IME 吞键。代按期间 overlay `setIgnoreMouseEvents(true, { forward: true })`，避免挡住游戏；用 F8 停。
+跟谱窗模式：`practice`（按对才滚）、`autoplay`（代按）。已去掉跟弹（有试听）。练习在 overlay **只校验音键**，不要求真按鼠标；练习时 Electron 用全局热键收 Z/X/C/V/B/N/M/,，不必点悬浮窗。可开「练习声音」（主窗发声）。跟谱窗仍用 `event.code` + `before-input-event`（窗有焦点时）。代按只保留 **NPC 自动演奏**（等间隔节奏，结束按 Q）；`/` 或 `?` 暂停/继续，**F9**（或 F8）停止并 panic 松开全部键鼠。热键用 `globalShortcut` + `GetAsyncKeyState` 轮询，避免焦点在其它窗口时失效。代按期间 overlay `setIgnoreMouseEvents(true, { forward: true })`。文案是「自动模拟键鼠弹奏」，不要写「自动往游戏里按」，不要突出游戏。
 
 ## 怎么跑
 
@@ -68,7 +68,7 @@ npm start
 
 ## 当前进度与已知坑
 
-已完成：模拟器、曲库、Mac Electron 透明跟谱、跟弹/练习、代按（Mac CGEvent 路径 + Win SendInput 代码）、默认曲库 JSON 上传 GitHub。
+已完成：模拟器、曲库、Mac Electron 透明跟谱、练习/代按（Mac CGEvent 路径 + Win SendInput 代码）、默认曲库 JSON 上传 GitHub。
 
 未完成 / 未验证：
 

@@ -3,10 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>口风琴模拟</title>
+  <title>口琴模拟器</title>
+  <script>
+    (() => {
+      const theme = localStorage.getItem("koufengqin-theme") === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <style>
     :root {
-      color-scheme: light dark;
+      color-scheme: light;
       --bg: light-dark(#eef3f6, #11161d);
       --surface: light-dark(#ffffff, #19212b);
       --surface-2: light-dark(#f6f9fb, #202a35);
@@ -23,6 +30,14 @@
       --black-key: #171b22;
       --black-key-down: #3a6270;
       --shadow: light-dark(rgba(34, 47, 62, .12), rgba(0, 0, 0, .28));
+    }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
     }
 
     * {
@@ -60,33 +75,144 @@
     }
 
     .app {
-      width: min(1180px, calc(100% - 28px));
+      width: min(1440px, calc(100% - 28px));
       margin: 0 auto;
-      padding: 22px 0 34px;
+      padding: 16px 0;
+      height: 100vh;
       display: grid;
-      gap: 16px;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
     }
 
     header {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 6px 0;
+      display: grid;
+      grid-template-columns: minmax(168px, .72fr) minmax(0, 1.5fr) auto;
+      align-items: center;
+      gap: 10px 16px;
+      padding: 2px 0 0;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(24px, 4vw, 42px);
-      line-height: 1.02;
+      font-size: clamp(22px, 2.6vw, 34px);
+      line-height: 1.05;
       letter-spacing: 0;
     }
 
     .tagline {
-      margin-top: 8px;
+      margin: 4px 0 0;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.45;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .core-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .core-btn {
+      min-height: 62px;
+      padding: 8px 12px;
+      text-align: left;
+      border-color: color-mix(in srgb, var(--teal) 55%, var(--line));
+      background: color-mix(in srgb, var(--teal) 14%, var(--surface));
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--teal) 12%, transparent);
+    }
+
+    .core-btn strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .core-btn span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .core-btn.is-on,
+    .core-btn:hover {
+      border-color: color-mix(in srgb, var(--teal) 80%, var(--line));
+      background: color-mix(in srgb, var(--teal) 22%, var(--surface));
+    }
+
+    .core-btn-auto {
+      border-color: color-mix(in srgb, var(--gold) 58%, var(--line));
+      background: color-mix(in srgb, var(--gold) 14%, var(--surface));
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--gold) 12%, transparent);
+    }
+
+    .core-btn-auto.is-on,
+    .core-btn-auto:hover {
+      border-color: color-mix(in srgb, var(--gold) 80%, var(--line));
+      background: color-mix(in srgb, var(--gold) 22%, var(--surface));
+    }
+
+    .notices {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px 16px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .notices p {
+      margin: 0;
+    }
+
+    .notice-free {
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .notice-feedback strong {
+      color: var(--ink);
+      font-weight: 780;
+    }
+
+    .notice-tips {
+      flex: 1 1 100%;
+    }
+
+    .notice-tips summary {
+      cursor: pointer;
+      color: var(--ink);
+      font-weight: 720;
+    }
+
+    .notice-tips ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .notice-tips li + li {
+      margin-top: 4px;
+    }
+
+    .header-aside {
+      display: grid;
+      justify-items: stretch;
+      gap: 8px;
+      min-width: 174px;
+    }
+
+    .theme-toggle {
+      min-height: 32px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .status {
@@ -113,9 +239,10 @@
 
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(320px, .85fr);
+      grid-template-columns: minmax(0, 1.75fr) minmax(300px, .72fr);
       gap: 16px;
-      align-items: start;
+      align-items: stretch;
+      min-height: 0;
     }
 
     .panel {
@@ -127,6 +254,17 @@
 
     .instrument {
       padding: 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .instrument > .toolbar,
+    .instrument > .melodica,
+    .instrument > .mouse-row,
+    .instrument > .jianpu {
+      flex: 0 0 auto;
     }
 
     .toolbar {
@@ -147,6 +285,13 @@
     .danger {
       border-color: color-mix(in srgb, var(--red) 70%, var(--line));
       color: light-dark(#9b2420, #ffb0aa);
+    }
+
+    .record-btn.is-on {
+      border-color: color-mix(in srgb, var(--red) 72%, var(--line));
+      background: color-mix(in srgb, var(--red) 16%, var(--surface));
+      color: light-dark(#9b2420, #ffb0aa);
+      font-weight: 780;
     }
 
     .small {
@@ -285,7 +430,8 @@
       color: var(--ink);
     }
 
-    .jianpu-note.done {
+    .jianpu-note.done,
+    .jianpu-rest.done {
       opacity: .38;
     }
 
@@ -333,6 +479,8 @@
       background: var(--surface-2);
       color: var(--muted);
       font-size: 12px;
+      cursor: pointer;
+      user-select: none;
     }
 
     .mouse-state.active {
@@ -343,8 +491,53 @@
     }
 
     .side {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 16px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .side .library-panel {
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+
+    .side .import-panel {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    .library-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .library-head h2 {
+      margin: 0;
+    }
+
+    #songSelect {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .library-panel .song-title-input {
+      width: 100%;
+      min-height: 40px;
     }
 
     .section {
@@ -359,11 +552,7 @@
     }
 
     .song-list {
-      display: grid;
-      gap: 8px;
-      max-height: 380px;
-      overflow: auto;
-      padding-right: 2px;
+      display: none;
     }
 
     .song-card {
@@ -390,6 +579,18 @@
     .song-title {
       font-weight: 800;
       line-height: 1.25;
+    }
+
+    .song-title-input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid color-mix(in srgb, var(--teal) 72%, var(--line));
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 4px 8px;
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .song-meta {
@@ -434,20 +635,61 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
-    .analysis {
-      min-height: 22px;
-      color: var(--muted);
+    #agentSkill {
+      min-height: 72px;
+      max-height: 88px;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.45;
+    }
+
+    #manualJson {
+      min-height: 88px;
+      max-height: 128px;
+    }
+
+    .import-steps {
+      margin: 0 0 10px;
+      padding: 8px 10px 8px 26px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .import-steps li + li {
+      margin-top: 6px;
+    }
+
+    .score-block {
+      margin-top: 12px;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .score-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .score-bar strong {
+      margin-right: auto;
+      font-size: 14px;
     }
 
     .score {
-      margin-top: 12px;
+      flex: 1 1 auto;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--surface-3);
-      padding: 10px;
-      max-height: 176px;
+      padding: 0 0 8px;
+      min-height: 0;
       overflow: auto;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       color: var(--muted);
@@ -455,19 +697,65 @@
       line-height: 1.6;
     }
 
+    .score.editing {
+      border-color: color-mix(in srgb, var(--teal) 72%, var(--line));
+    }
+
+    .score-freeze {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px 6px;
+    }
+
+    .score-head,
     .score-line {
       display: grid;
-      grid-template-columns: 64px 42px 42px minmax(72px, 1fr) 58px;
+      grid-template-columns: 58px 32px 32px minmax(56px, 1fr) 52px 58px;
       gap: 8px;
-      padding: 2px 6px;
+      padding: 2px 10px;
       border-radius: 5px;
       white-space: nowrap;
+    }
+
+    .score-head {
+      padding: 2px 0;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .score-head-cell.gap,
+    .score-cell[data-field="gap"] {
+      color: color-mix(in srgb, var(--gold) 82%, var(--ink));
+      font-weight: 800;
+    }
+
+    .score-line {
+      cursor: pointer;
+    }
+
+    .score-line:hover {
+      background: color-mix(in srgb, var(--teal) 10%, transparent);
     }
 
     .score-line.active {
       background: color-mix(in srgb, var(--teal) 22%, var(--surface));
       color: var(--ink);
       font-weight: 800;
+    }
+
+    .score-line.selected {
+      background: color-mix(in srgb, var(--gold) 22%, var(--surface));
+      color: var(--ink);
+      box-shadow: inset 3px 0 0 var(--gold);
+    }
+
+    .score-line.active.selected {
+      background: color-mix(in srgb, var(--teal) 16%, color-mix(in srgb, var(--gold) 18%, var(--surface)));
+      box-shadow: inset 3px 0 0 var(--gold);
     }
 
     .score-cell {
@@ -487,14 +775,42 @@
       box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 72%, var(--line));
     }
 
+    .score-cell.overlap {
+      color: #f0a0a0;
+    }
+
+    .jianpu-rest {
+      display: inline-block;
+      min-width: 1.1em;
+      text-align: center;
+      padding: 0 2px;
+      border-radius: 4px;
+      color: var(--muted);
+      opacity: 0.72;
+      cursor: pointer;
+    }
+
+    .jianpu-rest:hover {
+      background: color-mix(in srgb, var(--gold) 18%, var(--surface));
+      opacity: 1;
+    }
+
+    .jianpu-rest.active {
+      background: color-mix(in srgb, var(--gold) 32%, var(--surface));
+      color: var(--ink);
+      font-weight: 800;
+      opacity: 1;
+    }
+
     .progress {
-      height: 8px;
+      height: 10px;
       border-radius: 999px;
       background: var(--surface-3);
       overflow: hidden;
       margin-left: auto;
       width: min(190px, 38vw);
       border: 1px solid var(--line);
+      cursor: pointer;
     }
 
     .progress span {
@@ -518,6 +834,70 @@
       width: 92px;
     }
 
+    .volume-label input[type="number"] {
+      width: 64px;
+      padding: 4px 6px;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(8, 12, 18, .62);
+    }
+
+    .dialog-backdrop[hidden] {
+      display: none;
+    }
+
+    .dialog {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 12px;
+      padding: 18px 18px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 18px 50px var(--shadow);
+    }
+
+    .dialog h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .dialog p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .dialog.wide {
+      width: min(580px, 100%);
+    }
+
+    .dialog ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .dialog li + li {
+      margin-top: 6px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
     .jianpu {
       margin-top: 12px;
       padding: 10px 12px;
@@ -538,6 +918,11 @@
       text-align: center;
       padding: 0 2px;
       border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .jianpu-note:hover {
+      background: color-mix(in srgb, var(--teal) 16%, var(--surface));
     }
 
     .jianpu-note.high::before,
@@ -604,7 +989,9 @@
     }
 
     body.coach-mode .app,
-    body.coach-mode .toast {
+    body.coach-mode .toast,
+    body.coach-mode #riskDialog,
+    body.coach-mode #noticeDialog {
       display: none;
     }
 
@@ -652,12 +1039,28 @@
       border-radius: 0 0 2px 0;
     }
 
+    .coach-drag {
+      height: 12px;
+      margin: 0 18px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .18);
+      cursor: move;
+      -webkit-app-region: drag;
+    }
+
     .coach-chrome {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       -webkit-app-region: no-drag;
+    }
+
+    .coach-chrome .coach-drag {
+      position: absolute;
+      top: 8px;
+      left: 22%;
+      right: 22%;
     }
 
     .coach-modes {
@@ -688,6 +1091,22 @@
     .coach-modes button.active {
       background: rgba(39, 143, 157, .85);
       font-weight: 760;
+    }
+
+    .coach-sound {
+      min-height: 26px;
+      padding: 4px 10px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(18, 24, 32, .72);
+      color: #e8eef4;
+      backdrop-filter: blur(10px);
+      -webkit-app-region: no-drag;
+    }
+
+    .coach-sound.is-off {
+      background: rgba(90, 42, 42, .72);
+      color: #f3d4d4;
     }
 
     .coach-msg {
@@ -724,7 +1143,7 @@
       background: rgba(8, 12, 18, .28);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
       backdrop-filter: blur(14px);
-      -webkit-app-region: drag;
+      -webkit-app-region: no-drag;
     }
 
     .coach-rail {
@@ -739,8 +1158,10 @@
 
     .coach-track {
       position: absolute;
-      inset: 6px auto 6px 0;
-      will-change: transform;
+      top: 6px;
+      bottom: 6px;
+      left: 0;
+      will-change: transform, left;
     }
 
     .coach-hit {
@@ -821,9 +1242,37 @@
     .coach-chip.mouse-right { background: rgba(207, 73, 67, .86); }
     .coach-chip.key { background: rgba(39, 143, 157, .86); }
 
+    @media (max-width: 1100px) {
+      header {
+        grid-template-columns: 1fr auto;
+      }
+
+      .core-actions {
+        grid-column: 1 / -1;
+      }
+    }
+
     @media (max-width: 900px) {
+      .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-rows: auto auto;
+      }
+
       .layout {
         grid-template-columns: 1fr;
+        min-height: 0;
+      }
+
+      .instrument,
+      .side,
+      .side .library-panel {
+        overflow: visible;
+      }
+
+      .score {
+        min-height: 240px;
+        max-height: 50vh;
       }
     }
 
@@ -834,8 +1283,12 @@
       }
 
       header {
-        align-items: stretch;
-        flex-direction: column;
+        grid-template-columns: 1fr;
+      }
+
+      .core-actions,
+      .header-aside {
+        grid-column: auto;
       }
 
       .toolbar {
@@ -879,12 +1332,30 @@
   <main class="app">
     <header>
       <div>
-        <h1>口风琴模拟</h1>
-        <div class="tagline">白键 Z X C V B N M , 对应 1 2 3 4 5 6 7 i；黑键是半音，也可按中键。左键降八度，右键升八度。空格播放，Shift+空格跟弹。代按会向系统发送键鼠（F8 停止），竞技反作弊可能判异常。</div>
+        <h1>口琴模拟器</h1>
+        <p class="tagline">快速提升电子口琴技巧</p>
       </div>
-      <div class="status" aria-live="polite">
-        <strong id="modeLabel">原调</strong>
-        <span id="noteLabel">等待弹奏</span>
+      <div class="core-actions">
+        <button class="core-btn" id="drillSelected" type="button">
+          <strong>练习</strong>
+          <span>按对才往下走</span>
+        </button>
+        <button class="core-btn core-btn-auto" id="autoplaySelected" type="button">
+          <strong>代按</strong>
+          <span>自动模拟键鼠弹奏</span>
+        </button>
+      </div>
+      <div class="header-aside">
+        <button class="theme-toggle" id="themeToggle" type="button">深色</button>
+        <div class="status" aria-live="polite">
+          <strong id="modeLabel">原调</strong>
+          <span id="noteLabel">等待弹奏</span>
+        </div>
+      </div>
+      <div class="notices">
+        <p class="notice-free">本工具免费开源，只做编程学习交流。要是有人拿它收费，请给卖家一个狠狠的差评。</p>
+        <p class="notice-feedback">有优化建议欢迎反馈，抖音号：<strong>wananbakabaka888</strong></p>
+        <button class="small" id="openNotice" type="button">注意事项</button>
       </div>
     </header>
 
@@ -892,20 +1363,20 @@
       <section class="panel instrument">
         <div class="toolbar">
           <button class="primary small" id="enableAudio" type="button">启用声音</button>
-          <button class="small" id="playSelected" type="button">播放曲库</button>
-          <button class="small" id="practiceSelected" type="button">跟弹</button>
-          <button class="small" id="autoplaySelected" type="button">代按</button>
-          <button class="small" id="openCoach" type="button">悬浮跟谱</button>
+          <button class="small" id="playSelected" type="button">试听</button>
+          <button class="small record-btn" id="recordSong" type="button">录制</button>
+          <button class="small" id="openCoach" type="button">只开悬浮窗</button>
           <button class="small danger" id="stopPlay" type="button" disabled>停止</button>
           <div class="segmented" aria-label="播放速度">
             <button class="small" type="button" data-speed="0.75">慢</button>
             <button class="small active" type="button" data-speed="1">原速</button>
             <button class="small" type="button" data-speed="1.25">快</button>
           </div>
+          <label class="loop-toggle"><input id="practiceSound" type="checkbox" checked> 练习声音</label>
           <label class="loop-toggle"><input id="loopPlay" type="checkbox"> 循环</label>
-          <label class="loop-toggle"><input id="npcSubmit" type="checkbox"> 结束按 Q</label>
+          <label class="volume-label">延迟 <input id="latencyMs" type="number" min="0" max="200" value="0" step="5"> ms</label>
           <label class="volume-label">音量 <input id="volume" type="range" min="0" max="100" value="72"></label>
-          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+          <div class="progress" id="progressTrack" title="点击跳到此处播放" role="presentation"><span id="progressBar"></span></div>
         </div>
 
         <div class="melodica" id="instrumentPad">
@@ -924,50 +1395,66 @@
           <div class="mouse-state" data-mouse="right">右键：升调 +12</div>
         </div>
 
-        <div class="jianpu" id="jianpuPreview" aria-label="简谱预览"></div>
-        <div class="score" id="scorePreview"></div>
+        <div class="jianpu" id="jianpuPreview" aria-label="简谱预览，点击音符从此处播放" title="点击音符从此处播放"></div>
+        <div class="score-block">
+          <div class="score-bar">
+            <strong>音表</strong>
+            <button class="small" id="editScore" type="button">编辑</button>
+            <button class="small" id="insertScoreRow" type="button" disabled>在上方插入</button>
+            <button class="small danger" id="deleteScoreRow" type="button" disabled>删除</button>
+            <button class="small primary" id="saveScore" type="button" disabled>保存</button>
+          </div>
+          <div class="score" id="scorePreview"></div>
+        </div>
       </section>
 
       <aside class="side">
-        <section class="panel section">
-          <h2>曲库</h2>
-          <div class="song-list" id="songList"></div>
-          <div class="song-actions" style="margin-top: 10px;">
+        <section class="panel section library-panel">
+          <div class="library-head">
+            <h2>曲库</h2>
+            <span class="song-meta" id="songMeta"></span>
+          </div>
+          <select id="songSelect" aria-label="选择曲子"></select>
+          <div class="song-actions" id="songActions" style="margin-top: 10px;">
+            <button class="small" data-action="play">试听</button>
+            <button class="small" data-action="edit">编辑谱</button>
+            <button class="small" data-action="rename">重命名</button>
+            <button class="small" data-action="copy">复制谱</button>
+            <button class="small danger" data-action="delete">删除</button>
+          </div>
+          <div class="song-actions" style="margin-top: 8px;">
             <button class="small" id="exportLibrary" type="button">导出曲库</button>
             <button class="small" id="importLibraryButton" type="button">导入曲库</button>
             <input id="importLibraryFile" type="file" accept="application/json,.json" hidden>
           </div>
         </section>
 
-        <section class="panel section">
-          <h2>根据音乐添加</h2>
+        <section class="panel section import-panel">
+          <h2>用 Agent 出谱并导入</h2>
+          <ol class="import-steps">
+            <li>点「复制提示词」，把这段话和简谱图一起发给 Cursor、ChatGPT、豆包、通义、Kimi 等。</li>
+            <li>对方会按格式吐出一整段 JSON，原样贴进下面的框。</li>
+            <li>点「导入到曲库」，左边立刻多出这首，不用重启软件。</li>
+          </ol>
           <div class="form-grid">
             <label>
-              曲名
-              <input id="audioTitle" type="text" placeholder="例如：新的旋律">
+              提示词
+              <textarea id="agentSkill" spellcheck="false" readonly></textarea>
+            </label>
+            <div class="song-actions">
+              <button class="small" id="copyAgentSkill" type="button">复制提示词</button>
+            </div>
+            <label>
+              曲名（JSON 里已有标题可留空）
+              <input id="manualTitle" type="text" placeholder="例如：新曲">
             </label>
             <label>
-              音乐文件
-              <input id="audioFile" type="file" accept="audio/*,video/*">
-            </label>
-            <button class="primary small" id="analyzeFile" type="button">分析并加入曲库</button>
-            <div class="analysis" id="analysisStatus">会先滤掉低音伴奏，再按起音切句。人声或主旋律清楚时更准；很厚的混音仍可能是近似谱。</div>
-          </div>
-        </section>
-
-        <section class="panel section">
-          <h2>编辑/导入按键谱</h2>
-          <div class="form-grid">
-            <label>
-              曲名
-              <input id="manualTitle" type="text" placeholder="例如：手动导入">
-            </label>
-            <label>
-              JSON 按键谱
-              <textarea id="manualJson" spellcheck="false" placeholder='[{"t":0,"d":0.3,"key":"z","note":"1","mouse":[]}]'></textarea>
+              把 Agent 的 JSON 贴这里
+              <textarea id="manualJson" spellcheck="false" placeholder='{"app":"口风琴模拟","version":1,"library":[{"title":"曲名","events":[{"t":0,"d":0.3,"key":"z","note":"1","mouse":[]}]}]}'></textarea>
             </label>
             <div class="song-actions">
               <button class="primary small" id="importManual" type="button">导入到曲库</button>
+              <button class="small" id="reloadImported" type="button">刷新项目曲库</button>
               <button class="small" id="saveManualEdit" type="button" disabled>保存覆盖</button>
               <button class="small" id="cancelManualEdit" type="button" disabled>取消编辑</button>
             </div>
@@ -977,6 +1464,35 @@
     </div>
   </main>
   <div class="toast" id="toast" role="status"></div>
+  <div id="noticeDialog" class="dialog-backdrop" hidden>
+    <div class="dialog wide" role="dialog" aria-labelledby="noticeTitle" aria-modal="true">
+      <h3 id="noticeTitle">注意事项</h3>
+      <ul>
+        <li>指法：中音 Z X C V B N M；高音按住右键（高音 1 直接按逗号）；低音按住左键；半音按中键。</li>
+        <li>录制：点「录制」后按本页琴键，再点「结束录制」进曲库。空格或停止也能结束。第一个音算起点。</li>
+        <li>练习：透明跟谱按对才前进，只校验音键，不必点悬浮窗。可开「练习声音」听自己按的音。代按：倒计时结束后自动模拟键鼠弹奏（NPC 节奏，结束会按 Q）。</li>
+        <li>代按快捷键：按 / 或 ? 暂停/继续，F9 结束。目标窗口若以管理员运行，本工具也要用管理员开。</li>
+        <li>代按会向系统发送键盘和鼠标。规律按键可能被安全软件判异常，存在风险。不要用于竞技场合。</li>
+      </ul>
+      <p>本工具免费开源，只做编程学习交流。要是有人拿它收费，请给卖家一个狠狠的差评。有优化建议欢迎反馈，抖音号：wananbakabaka888</p>
+      <label class="loop-toggle"><input id="noticeAckOnce" type="checkbox"> 下次启动不再弹出</label>
+      <div class="dialog-actions">
+        <button class="primary small" id="noticeOk" type="button">知道了</button>
+      </div>
+    </div>
+  </div>
+  <div id="riskDialog" class="dialog-backdrop" hidden>
+    <div class="dialog" role="dialog" aria-labelledby="riskTitle" aria-modal="true">
+      <h3 id="riskTitle">代按风险说明</h3>
+      <p>代按会向系统发送键盘和鼠标，倒计时结束后自动模拟键鼠弹奏。规律按键可能被安全软件判异常，存在风险。仅建议在自己电脑、非竞技场合使用。</p>
+      <p>NPC 自动演奏：倒计时结束后按谱自动模拟键鼠弹奏，结束会按 Q。按 / 或 ? 暂停/继续，F9 彻底松开。切走前台窗口会自动暂停。</p>
+      <label class="loop-toggle"><input id="riskAckOnce" type="checkbox"> 本机不再提示</label>
+      <div class="dialog-actions">
+        <button class="small" id="riskCancel" type="button">取消</button>
+        <button class="primary small" id="riskOk" type="button">已知晓，开始</button>
+      </div>
+    </div>
+  </div>
   <div id="coachHud">
     <div class="coach-resize n" data-resize="n"></div>
     <div class="coach-resize s" data-resize="s"></div>
@@ -987,11 +1503,12 @@
     <div class="coach-resize se" data-resize="se"></div>
     <div class="coach-resize sw" data-resize="sw"></div>
     <div class="coach-chrome">
+      <div class="coach-drag" title="拖动跟谱窗"></div>
       <div class="coach-modes">
-        <button type="button" data-coach-mode="follow">跟弹</button>
         <button type="button" data-coach-mode="practice">练习</button>
         <button type="button" data-coach-mode="autoplay">代按</button>
       </div>
+      <button type="button" class="coach-sound" id="coachSoundToggle">声音开</button>
       <button type="button" class="coach-close" id="coachClose" aria-label="关闭跟谱">×</button>
     </div>
     <div class="coach-msg" id="coachMsg"></div>
@@ -1003,282 +1520,11 @@
     </div>
   </div>
 
+  <script src="library/imported-songs.js?v=ok-defaults"></script>
   <script>
     (() => {
       const STORAGE_KEY = "koufengqin-simulator-library-v1";
-      const defaultSong = {
-        id: "delta-clip",
-        title: "三角洲片段（按视频微调版）",
-        source: "图片简谱定音，视频音频微调起点和节奏",
-        createdAt: "2026-09-11",
-        events: [
-          { t: 0.000, d: 0.662, key: "z", note: "1", mouse: ["right"] },
-          { t: 0.697, d: 0.429, key: "m", note: "7", mouse: [] },
-          { t: 1.161, d: 0.430, key: "z", note: "1", mouse: ["right"] },
-          { t: 1.626, d: 0.893, key: "n", note: "6", mouse: [] },
-          { t: 2.554, d: 0.662, key: "n", note: "6", mouse: ["right"] },
-          { t: 3.251, d: 0.894, key: "b", note: "5", mouse: ["right"] },
-          { t: 4.180, d: 0.661, key: "x", note: "2", mouse: ["right"] },
-          { t: 4.876, d: 0.198, key: "v", note: "4", mouse: ["right"] },
-          { t: 5.109, d: 0.181, key: "c", note: "3", mouse: ["right"] },
-          { t: 5.341, d: 0.661, key: "c", note: "3", mouse: ["right"] },
-          { t: 6.037, d: 0.430, key: "x", note: "2", mouse: ["right"] },
-          { t: 6.502, d: 0.429, key: "c", note: "3", mouse: ["right"] },
-          { t: 6.966, d: 0.198, key: "x", note: "2", mouse: ["right"] },
-          { t: 7.199, d: 0.181, key: "z", note: "1", mouse: ["right"] },
-          { t: 7.431, d: 1.590, key: "z", note: "1", mouse: ["right"] },
-          { t: 9.056, d: 0.429, key: "m", note: "7", mouse: [] },
-          { t: 9.520, d: 0.894, key: "n", note: "6", mouse: [] },
-          { t: 10.449, d: 0.894, key: "n", note: "6", mouse: ["right"] },
-          { t: 11.378, d: 0.430, key: "b", note: "5", mouse: ["right"] },
-          { t: 11.843, d: 0.362, key: "x", note: "2", mouse: ["right"] },
-          { t: 12.307, d: 0.894, key: "x", note: "2", mouse: ["right"] },
-          { t: 13.236, d: 0.197, key: "v", note: "4", mouse: ["right"] },
-          { t: 13.468, d: 1.161, key: "c", note: "3", mouse: ["right"] },
-          { t: 15.093, d: 0.430, key: "z", note: "1", mouse: ["right"] },
-          { t: 15.558, d: 0.429, key: "m", note: "7", mouse: [] },
-          { t: 16.022, d: 0.429, key: "z", note: "1", mouse: ["right"] },
-          { t: 16.486, d: 0.894, key: "n", note: "6", mouse: [] },
-          { t: 17.415, d: 0.697, key: "n", note: "6", mouse: ["right"] },
-          { t: 18.344, d: 0.662, key: "b", note: "5", mouse: ["right"] },
-          { t: 19.041, d: 0.661, key: "x", note: "2", mouse: ["right"] },
-          { t: 19.737, d: 0.160, key: "v", note: "4", mouse: ["right"] },
-          { t: 19.853, d: 0.160, key: "c", note: "3", mouse: ["right"] },
-          { t: 19.969, d: 0.894, key: "c", note: "3", mouse: ["right"] },
-          { t: 20.898, d: 0.430, key: "x", note: "2", mouse: ["right"] },
-          { t: 21.363, d: 0.197, key: "c", note: "3", mouse: ["right"] },
-          { t: 21.595, d: 0.197, key: "x", note: "2", mouse: ["right"] },
-          { t: 21.827, d: 0.181, key: "z", note: "1", mouse: ["right"] },
-          { t: 22.059, d: 1.591, key: "z", note: "1", mouse: ["right"] },
-          { t: 23.685, d: 0.661, key: "m", note: "7", mouse: [] },
-          { t: 24.381, d: 1.126, key: "n", note: "6", mouse: [] },
-          { t: 25.542, d: 1.126, key: "c", note: "3", mouse: ["right"] },
-          { t: 26.703, d: 0.430, key: "x", note: "2", mouse: ["right"] },
-          { t: 27.168, d: 0.429, key: "c", note: "3", mouse: ["right"] },
-          { t: 27.632, d: 0.429, key: "b", note: "5", mouse: ["right"] },
-          { t: 28.096, d: 0.662, key: "n", note: "6", mouse: ["right"] },
-          { t: 28.793, d: 1.010, key: "n", note: "6", mouse: [] }
-        ]
-      };
-
-      const gechangZuguoSong = {
-        id: "gechang-zuguo-auto",
-        title: "歌唱祖国（按图校正版）",
-        source: "按用户提供钢琴简谱图片录入",
-        createdAt: "2026-09-11",
-        events: [
-          { t: 0.000, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 0.480, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 0.960, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 1.440, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 1.920, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 2.400, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 2.880, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 3.360, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 3.840, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 4.500, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 4.980, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 5.460, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 5.940, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 6.420, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 6.900, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 7.380, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 7.860, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 8.340, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 9.580, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 10.060, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 10.540, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 11.020, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 11.500, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 11.980, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 12.460, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 12.940, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 13.420, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 13.900, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 14.560, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 15.040, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 15.520, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 16.000, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 16.480, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 16.960, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 17.440, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 17.920, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 18.400, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 18.880, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 20.120, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 20.600, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 21.080, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 21.560, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 22.040, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 22.520, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 23.000, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 23.480, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 23.960, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 24.440, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 25.100, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 25.580, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 26.060, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 26.540, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 27.020, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 27.500, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 27.980, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 28.460, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 28.940, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 29.420, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 30.660, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 31.140, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 31.620, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 32.100, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 32.760, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 33.240, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 33.720, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 34.200, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 34.860, d: 0.390, key: "n", note: "6", mouse: ["left"] },
-          { t: 35.340, d: 0.390, key: "n", note: "6", mouse: ["left"] },
-          { t: 35.820, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 36.300, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 36.780, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 37.260, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 37.740, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 38.220, d: 0.390, key: "m", note: "7", mouse: ["left"] },
-          { t: 38.700, d: 0.390, key: "n", note: "6", mouse: ["left"] },
-          { t: 39.180, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 40.420, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 40.900, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 41.380, d: 0.390, key: "n", note: "6", mouse: ["left"] },
-          { t: 41.860, d: 0.390, key: "n", note: "6", mouse: ["left"] },
-          { t: 42.340, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 42.820, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 43.300, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 43.780, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 44.440, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 44.920, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 45.400, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 45.880, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 46.360, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 46.840, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 47.320, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 47.800, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 48.280, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 49.520, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 50.000, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 50.480, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 50.960, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 51.440, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 51.920, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 52.400, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 52.880, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 53.360, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 53.840, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 54.320, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 54.800, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 56.040, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 56.520, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 57.000, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 57.480, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 57.960, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 58.440, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 58.920, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 59.400, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 59.880, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 60.360, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 60.840, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 61.320, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 62.560, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 63.040, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 63.520, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 64.000, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 64.480, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 64.960, d: 0.390, key: "z", note: "1", mouse: [] },
-          { t: 65.440, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 65.920, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 66.400, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 67.060, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 67.540, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 68.020, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 68.500, d: 0.390, key: "z", note: "1", mouse: ["right"] },
-          { t: 68.980, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 69.460, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 69.940, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 70.420, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 70.900, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 72.140, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 72.620, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 73.100, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 73.580, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 74.060, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 74.540, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 75.020, d: 0.390, key: "x", note: "2", mouse: [] },
-          { t: 75.500, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 75.980, d: 0.390, key: "v", note: "4", mouse: [] },
-          { t: 76.460, d: 0.390, key: "c", note: "3", mouse: [] },
-          { t: 77.120, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 77.600, d: 0.390, key: "b", note: "5", mouse: ["left"] },
-          { t: 78.080, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 78.560, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 79.040, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 79.520, d: 0.390, key: "m", note: "7", mouse: [] },
-          { t: 80.000, d: 0.390, key: "b", note: "5", mouse: [] },
-          { t: 80.480, d: 0.390, key: "n", note: "6", mouse: [] },
-          { t: 80.960, d: 0.390, key: "m", note: "7", mouse: [] },
-          { t: 81.440, d: 0.780, key: "z", note: "1", mouse: ["right"] }
-        ]
-      };
-
-      const jinyuLiangyuanSong = {
-        id: "jinyu-liangyuan-image",
-        title: "金玉良缘（按图校正版）",
-        source: "按用户提供曲谱图片录入",
-        createdAt: "2026-09-11",
-        events: [
-          { t: 0.000, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 0.520, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 1.040, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 1.760, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 2.280, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 2.800, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 3.320, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 3.840, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 4.560, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 5.080, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 5.600, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 6.320, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 6.840, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 7.360, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 8.780, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 9.300, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 9.820, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 10.340, d: 0.420, key: ",", note: "i", mouse: [] },
-          { t: 11.060, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 11.580, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 12.100, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 12.620, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 13.340, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 14.760, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 15.280, d: 0.420, key: "n", note: "6", mouse: ["right"] },
-          { t: 15.800, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 16.320, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 17.040, d: 0.420, key: ",", note: "i", mouse: [] },
-          { t: 17.560, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 18.280, d: 0.420, key: "b", note: "5", mouse: ["right"] },
-          { t: 18.800, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 20.220, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 20.740, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 21.460, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 21.980, d: 0.420, key: ",", note: "i", mouse: [] },
-          { t: 22.500, d: 0.420, key: "n", note: "6", mouse: [] },
-          { t: 23.220, d: 0.420, key: "c", note: "3", mouse: ["right"] },
-          { t: 23.740, d: 0.420, key: "x", note: "2", mouse: ["right"] },
-          { t: 24.260, d: 0.420, key: ",", note: "i", mouse: [] },
-          { t: 24.780, d: 0.420, key: "m", note: "7", mouse: [] },
-          { t: 25.500, d: 0.420, key: "b", note: "5", mouse: [] },
-          { t: 26.020, d: 0.420, key: "b", note: "5", mouse: [] },
-          { t: 26.540, d: 0.420, key: "n", note: "6", mouse: [] },
-          { t: 27.060, d: 0.750, key: "n", note: "6", mouse: [] }
-        ]
-      };
-
-      const builtInSongs = [defaultSong, gechangZuguoSong, jinyuLiangyuanSong];
+      const builtInSongs = Array.isArray(window.koufengqinImportedSongs) ? window.koufengqinImportedSongs.slice() : [];
 
       const notes = [
         { key: "z", note: "1", degree: 0, label: "Do", sharp: true },
@@ -1291,24 +1537,41 @@
         { key: ",", note: "i", degree: 12, label: "High Do", sharp: false }
       ];
       const keyMap = new Map(notes.map((note) => [note.key, note]));
-      const degreeToKey = notes.map((note) => note.key);
-      const degreeToNote = notes.map((note) => note.note);
-      const playableDegrees = notes.map((note) => note.degree);
 
       const VOLUME_KEY = "koufengqin-simulator-volume";
+      const SCENE_KEY = "koufengqin-autoplay-scene";
+      const HUMANIZE_KEY = "koufengqin-autoplay-humanize";
+      const LATENCY_KEY = "koufengqin-autoplay-latency";
+      const RISK_KEY = "koufengqin-autoplay-ack";
+      const NOTICE_KEY = "koufengqin-notice-ack";
+      const THEME_KEY = "koufengqin-theme";
+      const PRACTICE_SOUND_KEY = "koufengqin-practice-sound";
       const keysEl = document.getElementById("keys");
       const pad = document.getElementById("instrumentPad");
       const enableAudioBtn = document.getElementById("enableAudio");
       const playSelectedBtn = document.getElementById("playSelected");
-      const practiceSelectedBtn = document.getElementById("practiceSelected");
+      const recordSongBtn = document.getElementById("recordSong");
+      const drillSelectedBtn = document.getElementById("drillSelected");
+      const practiceSoundEl = document.getElementById("practiceSound");
+      const coachSoundBtn = document.getElementById("coachSoundToggle");
       const autoplaySelectedBtn = document.getElementById("autoplaySelected");
       const openCoachBtn = document.getElementById("openCoach");
-      const npcSubmitEl = document.getElementById("npcSubmit");
+      const humanizePlayEl = document.getElementById("humanizePlay");
+      const latencyMsEl = document.getElementById("latencyMs");
+      const riskDialogEl = document.getElementById("riskDialog");
+      const noticeDialogEl = document.getElementById("noticeDialog");
+      const noticeAckOnceEl = document.getElementById("noticeAckOnce");
+      const noticeOkBtn = document.getElementById("noticeOk");
+      const openNoticeBtn = document.getElementById("openNotice");
+      const riskAckOnceEl = document.getElementById("riskAckOnce");
       const stopBtn = document.getElementById("stopPlay");
       const loopPlayEl = document.getElementById("loopPlay");
       const volumeEl = document.getElementById("volume");
       const toastEl = document.getElementById("toast");
-      const songListEl = document.getElementById("songList");
+      const songSelectEl = document.getElementById("songSelect");
+      const songMetaEl = document.getElementById("songMeta");
+      const songActionsEl = document.getElementById("songActions");
+      const themeToggleBtn = document.getElementById("themeToggle");
       const scorePreviewEl = document.getElementById("scorePreview");
       const jianpuPreviewEl = document.getElementById("jianpuPreview");
       const exportLibraryBtn = document.getElementById("exportLibrary");
@@ -1318,13 +1581,17 @@
       const modeLabelEl = document.getElementById("modeLabel");
       const noteLabelEl = document.getElementById("noteLabel");
       const progressBar = document.getElementById("progressBar");
-      const audioFileEl = document.getElementById("audioFile");
-      const audioTitleEl = document.getElementById("audioTitle");
-      const analyzeBtn = document.getElementById("analyzeFile");
-      const analysisStatus = document.getElementById("analysisStatus");
+      const progressTrack = document.getElementById("progressTrack");
       const manualTitleEl = document.getElementById("manualTitle");
       const manualJsonEl = document.getElementById("manualJson");
       const importManualBtn = document.getElementById("importManual");
+      const copyAgentSkillBtn = document.getElementById("copyAgentSkill");
+      const editScoreBtn = document.getElementById("editScore");
+      const insertScoreRowBtn = document.getElementById("insertScoreRow");
+      const deleteScoreRowBtn = document.getElementById("deleteScoreRow");
+      const saveScoreBtn = document.getElementById("saveScore");
+      const reloadImportedBtn = document.getElementById("reloadImported");
+      const agentSkillEl = document.getElementById("agentSkill");
       const saveManualEditBtn = document.getElementById("saveManualEdit");
       const cancelManualEditBtn = document.getElementById("cancelManualEdit");
       const mouseEls = {
@@ -1350,11 +1617,36 @@
         { id: "right", title: "右", sub: "升调" }
       ];
 
+      const retiredSongIds = [
+        "zheshijie-you-name-duoren",
+        "guyongzhe-jianpu",
+        "fuqin-jianpu",
+        "yekong-zuiliang-dexing",
+        "image-score-20260912-chengdu",
+        "image-score-20260912-lone-warrior",
+        "image-score-20260912-brightest-star",
+        "image-score-20260912-father",
+        "image-score-20260912-many-people",
+        "image-score-20260912-silk-thread",
+        "image-score-20260912-pipa-qu",
+        "image-score-20260912-lanting-preface",
+        "jinyu-liangyuan-image",
+        "image-score-jinyuliangyuan-20260912-v1",
+        "gechang-zuguo-auto",
+        "delta-clip",
+        "taiyang-zhaochang-shengqi"
+      ];
+
       let audio = null;
       let noiseBuffer = null;
       let masterGain = null;
       let library = loadLibrary();
-      let selectedId = library[0]?.id || defaultSong.id;
+      let selectedId = library[0]?.id || "";
+      let scoreEditing = false;
+      let scoreEditSongId = "";
+      let scoreSnapshot = null;
+      let selectedScoreIndex = -1;
+      let scoreSelectionSongId = "";
       let speed = 1;
       let active = new Map();
       let playbackVoices = new Map();
@@ -1364,8 +1656,20 @@
       let playbackEnd = 0;
       let playbackStart = 0;
       let playing = false;
+      let playbackPaused = false;
+      let pausedPlayhead = 0;
+      let lastHighlightKey = "";
+      let recording = false;
+      let recordDraftId = "";
+      let recordOrigin = 0;
+      let recordHolds = new Map();
+      let recordEvents = [];
+      let recordTimer = 0;
       let practicing = false;
       let autoplaying = false;
+      let autoplayingPaused = false;
+      let autoplaySongId = "";
+      let playScene = "npc";
       let practiceIndex = 0;
       let practiceHits = 0;
       let practiceMisses = 0;
@@ -1379,10 +1683,13 @@
       let coaching = false;
       let coachRaf = 0;
       let coachAnchor = 0;
-      let coachKind = "follow";
+      let coachKind = "practice";
+      let practiceSoundOn = localStorage.getItem(PRACTICE_SOUND_KEY) !== "0";
+      let overlayPracticeActive = false;
       let coachBuiltId = "";
       let lastCoachPlayhead = 0;
       let lastCoachOverlay = "";
+      let autoplayClock = null;
 
       function loadVolume() {
         const raw = localStorage.getItem(VOLUME_KEY);
@@ -1409,7 +1716,7 @@
         try {
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
           if (Array.isArray(saved) && saved.length) {
-            const migrated = saved.map((song) => {
+            const migrated = saved.filter((song) => !retiredSongIds.includes(song.id)).map((song) => {
               const builtIn = builtInSongs.find((item) => item.id === song.id);
               if (!builtIn) return song;
               if (song.source === builtIn.source && song.events?.length === builtIn.events.length) return song;
@@ -1417,6 +1724,7 @@
               return { ...builtIn, title: customTitle };
             });
             for (const builtIn of builtInSongs.slice().reverse()) {
+              if (retiredSongIds.includes(builtIn.id)) continue;
               if (!migrated.some((song) => song.id === builtIn.id)) migrated.unshift(builtIn);
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
@@ -1428,6 +1736,33 @@
 
       function saveLibrary() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+        queueWriteImportedSongs();
+      }
+
+      let writeImportedTimer = 0;
+
+      function queueWriteImportedSongs() {
+        if (isCoachWindow || !window.koufengqin?.saveImportedSongs) return;
+        clearTimeout(writeImportedTimer);
+        writeImportedTimer = setTimeout(() => {
+          writeImportedTimer = 0;
+          writeImportedSongs();
+        }, 400);
+      }
+
+      async function writeImportedSongs() {
+        if (isCoachWindow || !window.koufengqin?.saveImportedSongs) return;
+        const result = await window.koufengqin.saveImportedSongs(library);
+        if (result?.ok) showToast(`已写回项目曲库（${result.count} 首）`);
+        else if (result?.error) showToast(`写回失败：${result.error}`);
+      }
+
+      function flushImportedSongs() {
+        if (isCoachWindow || !window.koufengqin?.saveImportedSongsSync) return;
+        if (!writeImportedTimer) return;
+        clearTimeout(writeImportedTimer);
+        writeImportedTimer = 0;
+        window.koufengqin.saveImportedSongsSync(library);
       }
 
       function ensureAudio() {
@@ -1452,27 +1787,32 @@
 
       function mouseOffsetFromList(list) {
         const items = list || [];
-        return (items.includes("right") ? 12 : 0) + (items.includes("left") ? -12 : 0) + (items.includes("middle") ? 1 : 0);
+        const octave = (items.includes("right") ? 12 : 0) + (items.includes("left") ? -12 : 0);
+        const half = items.includes("middle") && octave === 0 ? 1 : 0;
+        return octave + half;
       }
 
       function currentOffset(sharp) {
-        return mouseOffsetFromList([
-          ...(mouse.left ? ["left"] : []),
-          ...(mouse.right ? ["right"] : []),
-          ...(mouse.middle || sharp ? ["middle"] : [])
-        ]);
+        const octave = (mouse.right ? 12 : 0) + (mouse.left ? -12 : 0);
+        const half = sharp || (mouse.middle && octave === 0) ? 1 : 0;
+        return octave + half;
       }
 
       function frequency(note, offset = currentOffset(false)) {
         return 261.625565 * Math.pow(2, (note.degree + offset) / 12);
       }
 
+      function harmonicaBody(freq) {
+        return Math.min(3200, 980 + freq * 1.15);
+      }
+
       function applyVoiceFreq(voice, freq) {
         const now = voice.ctx.currentTime;
         voice.oscA.frequency.setTargetAtTime(freq, now, 0.01);
-        voice.oscB.frequency.setTargetAtTime(freq * 1.0016, now, 0.01);
-        voice.oscC.frequency.setTargetAtTime(freq * 2.995, now, 0.01);
-        voice.noiseFilter.frequency.setTargetAtTime(Math.min(4200, freq * 3.2), now, 0.02);
+        voice.oscB.frequency.setTargetAtTime(freq * 2, now, 0.01);
+        voice.oscC.frequency.setTargetAtTime(freq * 4, now, 0.01);
+        voice.noiseFilter.frequency.setTargetAtTime(Math.min(2800, freq * 2.4), now, 0.02);
+        voice.body.frequency.setTargetAtTime(harmonicaBody(freq), now, 0.03);
       }
 
       function startVoice(note, offset = currentOffset(false)) {
@@ -1483,8 +1823,8 @@
         const oscA = ctx.createOscillator();
         const oscB = ctx.createOscillator();
         const oscC = ctx.createOscillator();
-        const vibrato = ctx.createOscillator();
-        const vibratoGain = ctx.createGain();
+        const tremolo = ctx.createOscillator();
+        const tremoloGain = ctx.createGain();
         const gainA = ctx.createGain();
         const gainB = ctx.createGain();
         const gainC = ctx.createGain();
@@ -1496,39 +1836,38 @@
         const reed = ctx.createBiquadFilter();
         const out = ctx.createGain();
 
-        oscA.type = "sawtooth";
-        oscB.type = "square";
-        oscC.type = "triangle";
-        vibrato.type = "sine";
+        oscA.type = "sine";
+        oscB.type = "sine";
+        oscC.type = "sine";
+        tremolo.type = "sine";
         oscA.frequency.value = freq;
-        oscB.frequency.value = freq * 1.0016;
-        oscC.frequency.value = freq * 2.995;
-        vibrato.frequency.value = 4.7;
-        vibratoGain.gain.value = 1.15;
-        gainA.gain.value = 0.16;
-        gainB.gain.value = 0.09;
+        oscB.frequency.value = freq * 2;
+        oscC.frequency.value = freq * 4;
+        tremolo.frequency.value = 5.1;
+        tremoloGain.gain.value = 0;
+        gainA.gain.value = 0.22;
+        gainB.gain.value = 0.15;
         gainC.gain.value = 0.045;
         breath.buffer = noiseBuffer;
         breath.loop = true;
         breathGain.gain.value = 0.0001;
         noiseFilter.type = "bandpass";
-        noiseFilter.frequency.value = Math.min(4200, freq * 3.2);
-        noiseFilter.Q.value = 1.4;
+        noiseFilter.frequency.value = Math.min(2800, freq * 2.4);
+        noiseFilter.Q.value = 0.9;
         highpass.type = "highpass";
-        highpass.frequency.value = 90;
-        highpass.Q.value = 0.7;
+        highpass.frequency.value = 70;
+        highpass.Q.value = 0.55;
         body.type = "lowpass";
-        body.frequency.value = 1680 + freq * 0.35;
-        body.Q.value = 1.05;
+        body.frequency.value = harmonicaBody(freq);
+        body.Q.value = 0.7;
         reed.type = "peaking";
-        reed.frequency.value = 920;
-        reed.Q.value = 1.8;
-        reed.gain.value = 5.5;
+        reed.frequency.value = 780;
+        reed.Q.value = 0.85;
+        reed.gain.value = 2.4;
         out.gain.value = 0.0001;
 
-        vibrato.connect(vibratoGain);
-        vibratoGain.connect(oscA.frequency);
-        vibratoGain.connect(oscB.frequency);
+        tremolo.connect(tremoloGain);
+        tremoloGain.connect(out.gain);
         oscA.connect(gainA);
         oscB.connect(gainB);
         oscC.connect(gainC);
@@ -1544,17 +1883,18 @@
         out.connect(masterGain);
 
         out.gain.setValueAtTime(0.0001, now);
-        out.gain.exponentialRampToValueAtTime(0.52, now + 0.016);
-        out.gain.setTargetAtTime(0.4, now + 0.05, 0.12);
-        breathGain.gain.setValueAtTime(0.028, now);
-        breathGain.gain.exponentialRampToValueAtTime(0.007, now + 0.09);
+        out.gain.exponentialRampToValueAtTime(0.46, now + 0.028);
+        out.gain.setTargetAtTime(0.36, now + 0.08, 0.16);
+        tremoloGain.gain.setTargetAtTime(0.01, now + 0.08, 0.08);
+        breathGain.gain.setValueAtTime(0.016, now);
+        breathGain.gain.exponentialRampToValueAtTime(0.004, now + 0.12);
 
         oscA.start(now);
         oscB.start(now);
         oscC.start(now);
-        vibrato.start(now);
+        tremolo.start(now);
         breath.start(now);
-        return { ctx, note, offset, locked: false, oscA, oscB, oscC, vibrato, breath, noiseFilter, out, stopped: false };
+        return { ctx, note, offset, locked: false, oscA, oscB, oscC, vibrato: tremolo, tremoloGain, breath, noiseFilter, body, out, stopped: false };
       }
 
       function retuneVoices() {
@@ -1574,8 +1914,9 @@
         voice.stopped = true;
         const now = voice.ctx.currentTime;
         voice.out.gain.cancelScheduledValues(now);
-        voice.out.gain.setTargetAtTime(0.0001, now, 0.045);
-        const stopAt = now + 0.22;
+        voice.tremoloGain?.gain.setTargetAtTime(0, now, 0.03);
+        voice.out.gain.setTargetAtTime(0.0001, now, 0.055);
+        const stopAt = now + 0.26;
         voice.oscA.stop(stopAt);
         voice.oscB.stop(stopAt);
         voice.oscC.stop(stopAt);
@@ -1617,6 +1958,16 @@
         if (!note) return;
         if (isCoachWindow) {
           if (practicing) handlePracticePress(key, sharp);
+          if (practicing && practiceSoundOn && !window.koufengqin?.isApp && !active.has(voiceKey)) {
+            const event = selectedSong()?.events[practiceIndex];
+            const offset = event && event.key === key ? mouseOffsetFromList(event.mouse) : currentOffset(sharp);
+            active.set(voiceKey, startVoice(note, offset));
+          }
+          return;
+        }
+        if (practicing && !practiceSoundOn) {
+          handlePracticePress(key, sharp);
+          refreshKeyVisual(key);
           return;
         }
         if (active.has(voiceKey)) return;
@@ -1624,6 +1975,7 @@
         active.set(voiceKey, startVoice(note, offset));
         refreshKeyVisual(key);
         updateStatus(note, offset);
+        if (recording) onRecordPress(key, sharp);
         if (practicing) handlePracticePress(key, sharp);
       }
 
@@ -1632,10 +1984,12 @@
         const voiceKey = sharp ? `#${key}` : key;
         if (isCoachWindow) {
           if (practicing) handlePracticeRelease(key, sharp);
+          if (active.has(voiceKey)) stopVoice(voiceKey);
           return;
         }
         stopVoice(voiceKey);
         refreshKeyVisual(key);
+        if (recording) onRecordRelease(key, sharp);
         if (practicing) handlePracticeRelease(key, sharp);
         updateStatus();
       }
@@ -1668,10 +2022,10 @@
 
       function modeLabel() {
         const semis = currentOffset(false);
-        if (semis === 13) return "升调+半音";
+        if (semis === 13) return "升调";
         if (semis === 12) return "升调";
         if (semis === 1) return "半音";
-        if (semis === -11) return "降调+半音";
+        if (semis === -11) return "降调";
         if (semis === -12) return "降调";
         return "原调";
       }
@@ -1685,22 +2039,110 @@
         return bits.join(" + ");
       }
 
+      function setPracticeSound(on, persist = true) {
+        practiceSoundOn = Boolean(on);
+        if (persist) localStorage.setItem(PRACTICE_SOUND_KEY, practiceSoundOn ? "1" : "0");
+        if (practiceSoundEl) practiceSoundEl.checked = practiceSoundOn;
+        if (coachSoundBtn) {
+          coachSoundBtn.textContent = practiceSoundOn ? "声音开" : "声音关";
+          coachSoundBtn.classList.toggle("is-off", !practiceSoundOn);
+        }
+      }
+
+      function syncPracticeCapture(on) {
+        window.koufengqin?.setPracticeCapture?.(Boolean(on));
+      }
+
+      function reportPracticeState() {
+        if (!isCoachWindow) return;
+        window.koufengqin?.reportPracticeState?.({
+          practicing,
+          index: practiceIndex,
+          hits: practiceHits,
+          misses: practiceMisses
+        });
+      }
+
+      function applyPracticeState(state) {
+        if (isCoachWindow || !state) return;
+        overlayPracticeActive = Boolean(state.practicing);
+        if (state.practicing) {
+          practicing = true;
+          coachKind = "practice";
+          practiceIndex = Number(state.index) || 0;
+          practiceHits = Number(state.hits) || 0;
+          practiceMisses = Number(state.misses) || 0;
+          stopBtn.disabled = false;
+          showPracticeHint();
+          return;
+        }
+        if (practicing && !playing && !autoplaying) {
+          practicing = false;
+          stopBtn.disabled = true;
+          clearHints();
+          updateStatus();
+        }
+      }
+
+      function playPracticePreview(key) {
+        const note = keyMap.get(key);
+        if (!note || active.has(key)) return;
+        const event = selectedSong()?.events[practiceIndex];
+        const offset = event && event.key === key ? mouseOffsetFromList(event.mouse) : 0;
+        active.set(key, startVoice(note, offset));
+        refreshKeyVisual(key);
+        updateStatus(note, offset);
+      }
+
+      function updateCoreButtons() {
+        drillSelectedBtn?.classList.toggle("is-on", (practicing || overlayPracticeActive) && !autoplaying);
+        autoplaySelectedBtn?.classList.toggle("is-on", autoplaying);
+      }
+
+      function updateRecordButton() {
+        if (!recordSongBtn) return;
+        recordSongBtn.textContent = recording ? "结束录制" : "录制";
+        recordSongBtn.classList.toggle("is-on", recording);
+      }
+
       function updateStatus(lastNote, offset) {
+        updateCoreButtons();
+        updateRecordButton();
+        if (recording) {
+          const song = library.find((item) => item.id === recordDraftId);
+          const count = song?.events.length || recordEvents.length;
+          modeLabelEl.textContent = "录制中";
+          noteLabelEl.textContent = count ? `已录 ${count} 个音 · 再点结束录制` : "按下第一个音开始计时";
+          return;
+        }
         if (practicing) {
           const song = selectedSong();
           const total = song?.events.length || 0;
           const event = song?.events[practiceIndex];
-          modeLabelEl.textContent = event ? `跟弹 ${practiceIndex + 1}/${total}` : `跟弹完成 ${practiceHits}/${total}`;
+          const label = "练习";
+          modeLabelEl.textContent = event ? `${label} ${practiceIndex + 1}/${total}` : `${label}完成 ${practiceHits}/${total}`;
           noteLabelEl.textContent = event
             ? `请按 ${hintText(event)} · 对 ${practiceHits} 错 ${practiceMisses}`
             : `对 ${practiceHits} 错 ${practiceMisses}`;
           return;
         }
-        modeLabelEl.textContent = modeLabel();
+        if (playbackPaused) {
+          modeLabelEl.textContent = "试听暂停";
+          noteLabelEl.textContent = "空格继续 · 简谱高亮是当前位置";
+          return;
+        }
+        if (playing) {
+          modeLabelEl.textContent = "试听";
+        }
+        if (!playing) modeLabelEl.textContent = modeLabel();
         const currentVoice = [...playbackVoices.values()].find((voice) => !voice.stopped) || [...active.values()].at(-1);
         const current = lastNote || currentVoice?.note;
         const usedOffset = offset ?? currentVoice?.offset ?? currentOffset(false);
-        noteLabelEl.textContent = current ? `${current.note} ${current.label} · ${Math.round(frequency(current, usedOffset))} Hz` : "等待弹奏";
+        noteLabelEl.textContent = current
+          ? `${current.note} ${current.label} · ${Math.round(frequency(current, usedOffset))} Hz`
+          : playing
+            ? "停顿"
+            : "等待弹奏";
       }
 
       function renderKeys() {
@@ -1715,7 +2157,7 @@
           button.innerHTML = `<span class="num">${note.note}</span><span class="kbd">${note.key}</span><span class="hz">C调</span>`;
           button.addEventListener("pointerdown", (event) => {
             event.preventDefault();
-            button.setPointerCapture(event.pointerId);
+            try { button.setPointerCapture(event.pointerId); } catch (_) {}
             press(note.key);
           });
           button.addEventListener("pointerup", () => release(note.key));
@@ -1730,7 +2172,7 @@
             black.addEventListener("pointerdown", (event) => {
               event.preventDefault();
               event.stopPropagation();
-              black.setPointerCapture(event.pointerId);
+              try { black.setPointerCapture(event.pointerId); } catch (_) {}
               press(note.key, { sharp: true });
             });
             black.addEventListener("pointerup", () => release(note.key, { sharp: true }));
@@ -1749,24 +2191,169 @@
         return Math.max(...song.events.map((event) => event.t + event.d), 0);
       }
 
-      async function openCoachWindow() {
+      async function openCoachWindow(options = {}) {
         const song = selectedSong();
         if (!song) return;
         if (window.koufengqin?.openOverlay) {
-          await window.koufengqin.openOverlay({ song: song.id, mode: coachKind });
-          showToast("已打开透明跟谱窗，可拖到游戏上方");
+          await window.koufengqin.openOverlay({
+            song: song.id,
+            mode: options.mode || coachKind,
+            start: Boolean(options.start),
+            focus: options.focus !== false && !options.start
+          });
+          if (!options.silent) showToast("已打开透明跟谱窗，可拖到游戏上方");
           return;
         }
         const url = new URL(location.href);
         url.searchParams.set("coach", "1");
         url.searchParams.set("song", song.id);
-        url.searchParams.set("mode", coachKind);
+        url.searchParams.set("mode", options.mode || coachKind);
+        if (options.start) url.searchParams.set("start", "1");
         const popup = window.open(url.href, "koufengqin-coach", "popup=yes,width=760,height=220,menubar=no,toolbar=no,location=no,status=no,scrollbars=no");
         if (!popup) {
-          showToast("浏览器拦截了弹窗，请允许后重试");
+          if (!options.silent) showToast("浏览器拦截了弹窗，请允许后重试");
           return;
         }
-        showToast("已打开透明跟谱：悬停可选跟弹/练习");
+        if (!options.silent) showToast("已打开透明跟谱：悬停可选练习/代按");
+      }
+
+      function mouseForRecord(key, sharp) {
+        if (key === ",") return [];
+        if (mouse.left) return ["left"];
+        if (mouse.right) return ["right"];
+        if (mouse.middle || sharp) return ["middle"];
+        return [];
+      }
+
+      function recordDraftSong() {
+        return library.find((item) => item.id === recordDraftId);
+      }
+
+      function flushRecordDraft() {
+        const song = recordDraftSong();
+        if (!song) return;
+        const open = [...recordHolds.values()].map((hold) => ({
+          t: hold.t,
+          d: Math.max(0.06, Number(((performance.now() - hold.startedAt) / 1000).toFixed(3))),
+          key: hold.key,
+          note: hold.note,
+          mouse: hold.mouse
+        }));
+        song.events = normalizeEvents([...recordEvents, ...open]);
+        renderJianpu(song);
+        renderScore(song);
+        if (songMetaEl) songMetaEl.textContent = `${song.events.length} 个按键 · ${songDuration(song).toFixed(1)} 秒`;
+        selectedSongNameEl.textContent = `当前曲目：${song.title}`;
+        updateStatus();
+      }
+
+      function onRecordPress(key, sharp) {
+        if (!recording || isCoachWindow) return;
+        const voiceKey = sharp ? `#${key}` : key;
+        if (recordHolds.has(voiceKey)) return;
+        if (!recordOrigin) recordOrigin = performance.now();
+        const note = keyMap.get(key);
+        if (!note) return;
+        recordHolds.set(voiceKey, {
+          t: Number(((performance.now() - recordOrigin) / 1000).toFixed(3)),
+          key,
+          note: note.note,
+          mouse: mouseForRecord(key, sharp),
+          startedAt: performance.now()
+        });
+        flushRecordDraft();
+      }
+
+      function onRecordRelease(key, sharp) {
+        if (!recording) return;
+        const voiceKey = sharp ? `#${key}` : key;
+        const hold = recordHolds.get(voiceKey);
+        if (!hold) return;
+        recordHolds.delete(voiceKey);
+        recordEvents.push({
+          t: hold.t,
+          d: Math.max(0.06, Number(((performance.now() - hold.startedAt) / 1000).toFixed(3))),
+          key: hold.key,
+          note: hold.note,
+          mouse: hold.mouse
+        });
+        flushRecordDraft();
+      }
+
+      function startRecording() {
+        if (isCoachWindow) return;
+        if (recording) {
+          stopRecording();
+          return;
+        }
+        stopPlayback({ keepRecording: true });
+        recording = true;
+        recordDraftId = `record-${Date.now()}`;
+        recordOrigin = 0;
+        recordHolds = new Map();
+        recordEvents = [];
+        const stamp = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        library.unshift({
+          id: recordDraftId,
+          title: `录制 ${stamp}`,
+          source: "本机录制",
+          createdAt: new Date().toISOString().slice(0, 10),
+          events: []
+        });
+        selectedId = recordDraftId;
+        renderLibrary();
+        stopBtn.disabled = false;
+        clearInterval(recordTimer);
+        recordTimer = setInterval(() => {
+          if (recording) flushRecordDraft();
+        }, 200);
+        showToast("开始录制：按本页琴键，再点结束录制");
+        updateStatus();
+      }
+
+      function stopRecording(options = {}) {
+        if (!recording) return;
+        recording = false;
+        clearInterval(recordTimer);
+        recordTimer = 0;
+        for (const hold of [...recordHolds.values()]) {
+          recordEvents.push({
+            t: hold.t,
+            d: Math.max(0.06, Number(((performance.now() - hold.startedAt) / 1000).toFixed(3))),
+            key: hold.key,
+            note: hold.note,
+            mouse: hold.mouse
+          });
+        }
+        recordHolds.clear();
+        const song = recordDraftSong();
+        const nextId = options.nextId;
+        recordDraftId = "";
+        stopBtn.disabled = playing || practicing || autoplaying || coaching;
+        if (!song || !recordEvents.length) {
+          if (song) library = library.filter((item) => item.id !== song.id);
+          selectedId = nextId && library.some((item) => item.id === nextId) ? nextId : library[0]?.id || "";
+          recordEvents = [];
+          if (!options.skipRender) renderLibrary();
+          showToast("没有录到音，已取消");
+          updateStatus();
+          return;
+        }
+        song.events = normalizeEvents(recordEvents);
+        recordEvents = [];
+        selectedId = nextId && library.some((item) => item.id === nextId) ? nextId : song.id;
+        saveLibrary();
+        if (!options.skipRender) renderLibrary();
+        showToast(`已保存《${song.title}》，可重命名或改音表`);
+        updateStatus();
+      }
+
+      async function startDrillFromMain() {
+        coachKind = "practice";
+        if (practiceSoundOn) await enableAudio();
+        if (!isCoachWindow) await openCoachWindow({ silent: true, start: true });
+        else startPractice({ silent: true });
+        showToast("练习：按对才往下走，不必点悬浮窗");
       }
 
       async function closeCoachWindow() {
@@ -1845,8 +2432,10 @@
         if (!song) return;
         if (coachBuiltId !== song.id) buildCoachTracks(song);
         const shift = COACH_HIT_X - playhead * COACH_PX_PER_SEC;
-        coachMouseTrack.style.transform = `translateX(${shift}px)`;
-        coachKeyTrack.style.transform = `translateX(${shift}px)`;
+        coachMouseTrack.style.transform = "none";
+        coachKeyTrack.style.transform = "none";
+        coachMouseTrack.style.left = `${shift}px`;
+        coachKeyTrack.style.left = `${shift}px`;
         coachOverlay.textContent = overlay;
         const chips = [...coachMouseTrack.children, ...coachKeyTrack.children];
         for (const chip of chips) {
@@ -1859,7 +2448,7 @@
       }
 
       function setCoachMode(next, start) {
-        coachKind = next === "practice" ? "practice" : next === "autoplay" ? "autoplay" : "follow";
+        coachKind = next === "autoplay" ? "autoplay" : "practice";
         document.querySelectorAll("[data-coach-mode]").forEach((btn) => {
           btn.classList.toggle("active", btn.dataset.coachMode === coachKind);
         });
@@ -1979,39 +2568,179 @@
         coachRaf = requestAnimationFrame(tickCoach);
       }
 
+      function setPlayScene() {
+        playScene = "npc";
+      }
+
+      function showNoticeDialog() {
+        if (!noticeDialogEl || isCoachWindow) return;
+        noticeDialogEl.hidden = false;
+      }
+
+      function hideNoticeDialog() {
+        if (noticeAckOnceEl?.checked) localStorage.setItem(NOTICE_KEY, "1");
+        if (noticeDialogEl) noticeDialogEl.hidden = true;
+      }
+
       function confirmAutoplay() {
-        if (localStorage.getItem("koufengqin-autoplay-ack") === "1") return true;
-        const ok = window.confirm("代按会向系统发送键盘和鼠标按键。请在 3 秒倒计时内点到游戏窗口。腾讯 ACE 等反作弊可能把规律按键判为异常，存在封号风险。仅建议在自己电脑、非竞技场景使用。F8 可立即停止。\n\n继续？");
-        if (ok) localStorage.setItem("koufengqin-autoplay-ack", "1");
-        return ok;
+        if (isCoachWindow || localStorage.getItem(RISK_KEY) === "1") return Promise.resolve(true);
+        return new Promise((resolve) => {
+          riskDialogEl.hidden = false;
+          const finish = (ok) => {
+            riskDialogEl.hidden = true;
+            riskOkBtn.removeEventListener("click", onOk);
+            riskCancelBtn.removeEventListener("click", onCancel);
+            resolve(ok);
+          };
+          const onOk = () => {
+            if (riskAckOnceEl?.checked) localStorage.setItem(RISK_KEY, "1");
+            finish(true);
+          };
+          const onCancel = () => finish(false);
+          const riskOkBtn = document.getElementById("riskOk");
+          const riskCancelBtn = document.getElementById("riskCancel");
+          riskOkBtn.addEventListener("click", onOk);
+          riskCancelBtn.addEventListener("click", onCancel);
+        });
+      }
+
+      function autoplayHint(state) {
+        if (state?.phase === "countdown") return "倒计时后开始 · / 取消 · F9 结束";
+        if (state?.phase === "paused") return "已暂停 · / 或 ? 继续 · F9 结束";
+        return "NPC 代按中 · / 或 ? 暂停 · F9 结束";
+      }
+
+      function stopAutoplayClock() {
+        autoplayClock = null;
+        cancelAnimationFrame(coachRaf);
+        coachRaf = 0;
+      }
+
+      function applyAutoplayPlayhead(state) {
+        if (!state) return;
+        if (state.phase === "countdown") {
+          setCoachPlayhead(0, String(Math.max(1, Math.ceil((state.remainingMs || 0) / 1000))));
+          return;
+        }
+        if (state.phase === "playing") {
+          const elapsedMs = Number(state.elapsedMs);
+          const fromT0 = Number(state.t0) ? (Date.now() - Number(state.t0)) / 1000 : 0;
+          const speedValue = Math.max(0.25, Number(state.speed) || speed || 1);
+          const paceValue = Math.max(0.25, Number(state.pace) || 1);
+          const playhead = Number.isFinite(Number(state.playhead))
+            ? Number(state.playhead)
+            : (Number.isFinite(elapsedMs) ? elapsedMs / 1000 : fromT0) * (speedValue / paceValue);
+          setCoachPlayhead(playhead);
+        }
+      }
+
+      function startAutoplayClock(state) {
+        const speedValue = Math.max(0.25, Number(state.speed) || speed || 1);
+        const paceValue = Math.max(0.25, Number(state.pace) || 1);
+        applyAutoplayPlayhead(state);
+        if (state.phase === "countdown") {
+          autoplayClock = {
+            kind: "countdown",
+            until: Number(state.countdownUntil) || Date.now() + (Number(state.remainingMs) || 3000)
+          };
+        } else if (state.phase === "playing") {
+          const elapsedMs = Number(state.elapsedMs);
+          const nextT0 = Number(state.t0) || Date.now() - (Number.isFinite(elapsedMs) ? elapsedMs : 0);
+          autoplayClock = { kind: "playing", t0: nextT0, speed: speedValue, pace: paceValue };
+        } else {
+          autoplayClock = null;
+        }
+        if (!coachRaf && autoplayClock) tickAutoplayCoach();
+      }
+
+      function tickAutoplayCoach() {
+        if (!autoplayClock) {
+          coachRaf = 0;
+          return;
+        }
+        if (autoplayClock.kind === "countdown") {
+          const left = Math.max(0, autoplayClock.until - Date.now());
+          setCoachPlayhead(0, String(Math.max(1, Math.ceil(left / 1000))));
+          if (left <= 0) {
+            coachRaf = 0;
+            return;
+          }
+          coachRaf = requestAnimationFrame(tickAutoplayCoach);
+          return;
+        }
+        if (!autoplaying || autoplayingPaused) {
+          coachRaf = 0;
+          return;
+        }
+        const elapsed = Math.max(0, Date.now() - autoplayClock.t0) / 1000;
+        setCoachPlayhead(elapsed * (autoplayClock.speed / autoplayClock.pace));
+        coachRaf = requestAnimationFrame(tickAutoplayCoach);
+      }
+
+      function applyOverlaySong(songId) {
+        if (!songId) return;
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+          if (Array.isArray(saved) && saved.length) library = saved;
+        } catch (_) {}
+        if (!library.some((song) => song.id === songId)) return;
+        selectedId = songId;
+        coachBuiltId = "";
+        if (isCoachWindow) {
+          renderLibrary();
+          buildCoachTracks(selectedSong());
+          setCoachPlayhead(0, "");
+        }
       }
 
       function handleAutoplayState(state) {
-        if (!state) return;
-        autoplaying = state.phase === "countdown" || state.phase === "playing";
+        if (!state || state.phase === "idle") return;
+        if (isCoachWindow && state.songId && state.songId !== selectedId) applyOverlaySong(state.songId);
+        autoplayingPaused = state.phase === "paused";
+        autoplaying = state.phase === "countdown" || state.phase === "playing" || state.phase === "paused";
+        if (autoplaying) {
+          coachKind = "autoplay";
+          document.querySelectorAll("[data-coach-mode]").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.coachMode === "autoplay");
+          });
+        }
         if (state.phase === "countdown") {
           stopBtn.disabled = false;
-          setCoachPlayhead(0, String(Math.max(1, Math.ceil((state.remainingMs || 0) / 1000))));
-          setCoachMsg("切到游戏窗口 · F8 停止");
+          startAutoplayClock(state);
+          setCoachMsg(autoplayHint(state));
           modeLabelEl.textContent = "代按倒计时";
-          noteLabelEl.textContent = "3 秒内点到游戏";
+          noteLabelEl.textContent = "3 秒后自动模拟键鼠弹奏";
           return;
         }
         if (state.phase === "playing") {
           stopBtn.disabled = false;
-          setCoachPlayhead(state.playhead || 0);
-          setCoachMsg("代按中 · F8 停止");
-          modeLabelEl.textContent = "代按";
-          noteLabelEl.textContent = "正在发送键鼠";
+          startAutoplayClock(state);
+          setCoachMsg(autoplayHint(state));
+          modeLabelEl.textContent = "NPC代按";
+          noteLabelEl.textContent = "正在模拟键鼠 · / 暂停 · F9 结束";
+          return;
+        }
+        if (state.phase === "paused") {
+          stopBtn.disabled = false;
+          stopAutoplayClock();
+          setCoachPlayhead(state.playhead || lastCoachPlayhead, "暂停");
+          setCoachMsg(autoplayHint(state));
+          modeLabelEl.textContent = "代按暂停";
+          noteLabelEl.textContent = "/ 或 ? 继续，停止或 F9 结束";
           return;
         }
         autoplaying = false;
+        autoplayingPaused = false;
+        if (state.phase === "ended" || state.phase === "error") autoplaySongId = "";
+        stopAutoplayClock();
         if (state.phase === "ended") {
           const song = selectedSong();
           setCoachPlayhead(song ? songDuration(song) : 0, "结束");
-          showToast("代按结束");
+          showToast("NPC 代按结束，已尝试按 Q");
         } else if (state.phase === "error") {
           showToast(state.error || "代按出错");
+        } else if (state.phase === "stopped" && state.reason === "focus") {
+          showToast("已暂停，按 / 继续");
         }
         setCoachMsg("");
         if (!playing && !practicing && !coaching) stopBtn.disabled = true;
@@ -2021,11 +2750,22 @@
       async function startAutoplay() {
         const song = selectedSong();
         if (!song) return;
+        if (autoplayingPaused && autoplaySongId === song.id && window.koufengqin?.resumeAutoplay) {
+          await window.koufengqin.resumeAutoplay();
+          showToast("已继续，按 / 暂停，F9 结束");
+          return;
+        }
+        if (autoplaying || autoplayingPaused) {
+          if (window.koufengqin?.stopAutoplay) await window.koufengqin.stopAutoplay();
+          autoplaying = false;
+          autoplayingPaused = false;
+          autoplaySongId = "";
+        }
+        if (!(await confirmAutoplay())) return;
         if (!window.koufengqin?.startAutoplay) {
           showToast("代按只在桌面应用里可用，请用 npm start 打开");
           return;
         }
-        if (!confirmAutoplay()) return;
         if (window.koufengqin?.stopAutoplay) await window.koufengqin.stopAutoplay();
         stopPlayback({ restarting: true, keepLiveKeys: true, keepAutoplay: true });
         coachKind = "autoplay";
@@ -2034,25 +2774,29 @@
         });
         if (!isCoachWindow) {
           await window.koufengqin.openOverlay({ song: song.id, mode: "autoplay" });
-          await new Promise((resolve) => setTimeout(resolve, 280));
         } else {
           buildCoachTracks(song);
         }
         const result = await window.koufengqin.startAutoplay({
           events: song.events,
+          songId: song.id,
           speed,
-          humanize: true,
-          npcSubmit: Boolean(npcSubmitEl?.checked)
+          scenario: "npc",
+          humanize: false,
+          latencyMs: Number(latencyMsEl?.value) || 0
         });
         if (!result?.ok) {
           autoplaying = false;
+          autoplayingPaused = false;
+          autoplaySongId = "";
           stopBtn.disabled = true;
           showToast(result?.error || "代按未能开始");
           return;
         }
         autoplaying = true;
+        autoplaySongId = song.id;
         stopBtn.disabled = false;
-        showToast("3 秒内点到游戏，F8 停止");
+        showToast("3 秒后开始 NPC 代按，/ 暂停，F9 结束");
       }
 
       function startCoach() {
@@ -2064,97 +2808,208 @@
           setCoachPlayhead(song.events[0]?.t || 0);
           return;
         }
-        if (coachKind === "autoplay") {
-          startAutoplay();
+        startAutoplay();
+      }
+
+      function beginRename(item) {
+        if (!songSelectEl || songSelectEl.parentElement.querySelector(".song-title-input")) return;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "song-title-input";
+        input.value = item.title;
+        input.setAttribute("aria-label", "曲名");
+        songSelectEl.hidden = true;
+        songSelectEl.after(input);
+        input.focus();
+        input.select();
+
+        let done = false;
+        const finish = (commit) => {
+          if (done) return;
+          done = true;
+          const nextTitle = input.value.trim();
+          if (commit && nextTitle && nextTitle !== item.title) {
+            item.title = nextTitle;
+            saveLibrary();
+          }
+          input.remove();
+          songSelectEl.hidden = false;
+          renderLibrary();
+        };
+
+        input.addEventListener("keydown", (event) => {
+          event.stopPropagation();
+          if (event.key === "Enter") {
+            event.preventDefault();
+            finish(true);
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            finish(false);
+          }
+        });
+        input.addEventListener("blur", () => finish(true));
+      }
+
+      function cloneEvents(events) {
+        return JSON.parse(JSON.stringify(events || []));
+      }
+
+      function updateScoreEditButtons() {
+        if (editScoreBtn) editScoreBtn.textContent = scoreEditing ? "取消" : "编辑";
+        if (saveScoreBtn) saveScoreBtn.disabled = !scoreEditing;
+        scorePreviewEl?.classList.toggle("editing", scoreEditing);
+        updateScoreRowButtons();
+      }
+
+      function updateScoreRowButtons() {
+        const song = selectedSong();
+        const hasRow = Boolean(song?.events[selectedScoreIndex]);
+        const canInsert = Boolean(song) && (hasRow || !song.events.length);
+        if (insertScoreRowBtn) insertScoreRowBtn.disabled = !canInsert;
+        if (deleteScoreRowBtn) deleteScoreRowBtn.disabled = !hasRow;
+      }
+
+      function setSelectedScoreIndex(index, options = {}) {
+        const song = selectedSong();
+        const max = (song?.events.length || 0) - 1;
+        selectedScoreIndex = max < 0 ? -1 : Math.max(-1, Math.min(index, max));
+        scoreSelectionSongId = selectedId;
+        scorePreviewEl.querySelectorAll(".score-line.selected").forEach((row) => row.classList.remove("selected"));
+        if (selectedScoreIndex >= 0) {
+          const row = scorePreviewEl.querySelector(`.score-line[data-index="${selectedScoreIndex}"]`);
+          row?.classList.add("selected");
+          if (options.scroll) row?.scrollIntoView({ block: "nearest" });
+          if (options.syncJianpu && !playing && !practicing && !autoplaying) {
+            jianpuPreviewEl.querySelector(".jianpu-note.active")?.classList.remove("active");
+            jianpuPreviewEl.querySelector(".jianpu-rest.active")?.classList.remove("active");
+            const token = jianpuPreviewEl.querySelector(`.jianpu-note[data-index="${selectedScoreIndex}"]`);
+            token?.classList.add("active");
+            if (options.scroll) token?.scrollIntoView({ inline: "nearest", block: "nearest" });
+          }
+        }
+        updateScoreRowButtons();
+      }
+
+      function ensureScoreEditing() {
+        if (!scoreEditing) beginScoreEdit();
+      }
+
+      function defaultScoreEvent(template) {
+        return {
+          t: Number(template?.t) || 0,
+          d: Math.max(0.06, Number(template?.d) || 0.3),
+          key: template?.key || "z",
+          note: template?.note || keyMap.get(template?.key)?.note || "1",
+          mouse: Array.isArray(template?.mouse) ? [...template.mouse] : []
+        };
+      }
+
+      function refreshScoreViews(song) {
+        renderScore(song);
+        renderJianpu(song);
+        if (songMetaEl) songMetaEl.textContent = `${song.events.length} 个按键 · ${songDuration(song).toFixed(1)} 秒`;
+      }
+
+      function insertScoreRowAbove() {
+        const song = selectedSong();
+        if (!song) return;
+        if (playing) stopPlayback();
+        ensureScoreEditing();
+        const index = selectedScoreIndex >= 0 ? selectedScoreIndex : 0;
+        const template = song.events[index];
+        const inserted = defaultScoreEvent(template);
+        if (template) {
+          inserted.t = template.t;
+          shiftTail(song.events, index, inserted.d);
+          song.events.splice(index, 0, inserted);
+        } else {
+          song.events.push(inserted);
+        }
+        song.events = normalizeEvents(song.events);
+        refreshScoreViews(song);
+        setSelectedScoreIndex(index, { scroll: true, syncJianpu: true });
+        showToast("已在上方插入一行，点保存生效");
+      }
+
+      function deleteSelectedScoreRow() {
+        const song = selectedSong();
+        const index = selectedScoreIndex;
+        if (!song || index < 0 || !song.events[index]) {
+          showToast("先点音表里的一行");
           return;
         }
-        stopPlayback({ restarting: true, keepLiveKeys: true });
-        coaching = true;
-        coachAnchor = performance.now();
-        tickCoach();
+        if (playing) stopPlayback();
+        ensureScoreEditing();
+        const removed = song.events[index];
+        song.events.splice(index, 1);
+        if (song.events[index]) shiftTail(song.events, index, removed.t - song.events[index].t);
+        song.events = normalizeEvents(song.events);
+        refreshScoreViews(song);
+        setSelectedScoreIndex(song.events.length ? Math.min(index, song.events.length - 1) : -1, { scroll: true, syncJianpu: true });
+        showToast(song.events.length ? "已删除，点保存生效" : "音表已空，可再插入或点取消");
+      }
+
+      function beginScoreEdit() {
+        const song = selectedSong();
+        if (!song || scoreEditing) return;
+        if (playing) stopPlayback();
+        scoreEditing = true;
+        scoreEditSongId = song.id;
+        scoreSnapshot = cloneEvents(song.events);
+        renderScore(song);
+        updateScoreEditButtons();
+      }
+
+      function abandonScoreEdit() {
+        if (!scoreEditing) return;
+        const song = library.find((item) => item.id === scoreEditSongId);
+        if (song && scoreSnapshot) song.events = cloneEvents(scoreSnapshot);
+        scoreEditing = false;
+        scoreEditSongId = "";
+        scoreSnapshot = null;
+      }
+
+      function saveScoreEdit() {
+        if (!scoreEditing) return;
+        const song = library.find((item) => item.id === scoreEditSongId) || selectedSong();
+        if (song) song.events = normalizeEvents(song.events);
+        scoreEditing = false;
+        scoreEditSongId = "";
+        scoreSnapshot = null;
+        saveLibrary();
+        renderLibrary();
+        showToast("音表已保存");
       }
 
       function renderLibrary() {
+        if (recording && selectedId !== recordDraftId) {
+          const nextId = selectedId;
+          stopRecording({ skipRender: true, nextId });
+        }
+        if (scoreEditing && selectedId !== scoreEditSongId) abandonScoreEdit();
         const song = selectedSong();
         selectedId = song.id;
+        if (selectedId !== scoreSelectionSongId) {
+          scoreSelectionSongId = selectedId;
+          selectedScoreIndex = -1;
+        }
         selectedSongNameEl.textContent = `当前曲目：${song.title}`;
-        songListEl.innerHTML = "";
-        for (const item of library) {
-          const card = document.createElement("article");
-          card.className = `song-card${item.id === selectedId ? " selected" : ""}`;
-          const duration = songDuration(item);
-          card.innerHTML = `
-            <div class="song-head">
-              <div>
-                <div class="song-title">${escapeHtml(item.title)}</div>
-                <div class="song-meta">${item.events.length} 个按键 · ${duration.toFixed(1)} 秒</div>
-              </div>
-            </div>
-            <div class="song-actions">
-              <button class="small" data-action="select">选中</button>
-              <button class="small" data-action="play">播放</button>
-              <button class="small" data-action="practice">跟弹</button>
-              <button class="small" data-action="autoplay">代按</button>
-              <button class="small" data-action="edit">编辑谱</button>
-              <button class="small" data-action="rename">重命名</button>
-              <button class="small" data-action="copy">复制谱</button>
-              <button class="small danger" data-action="delete">删除</button>
-            </div>
-          `;
-          card.querySelector('[data-action="select"]').addEventListener("click", () => {
-            selectedId = item.id;
-            renderLibrary();
-          });
-          card.querySelector('[data-action="play"]').addEventListener("click", () => {
-            selectedId = item.id;
-            renderLibrary();
-            playSong();
-          });
-          card.querySelector('[data-action="practice"]').addEventListener("click", () => {
-            selectedId = item.id;
-            renderLibrary();
-            startPractice();
-          });
-          card.querySelector('[data-action="autoplay"]').addEventListener("click", () => {
-            selectedId = item.id;
-            renderLibrary();
-            startAutoplay();
-          });
-          card.querySelector('[data-action="copy"]').addEventListener("click", async () => {
-            const text = JSON.stringify(item.events, null, 2);
-            try {
-              await navigator.clipboard.writeText(text);
-              showToast("已复制按键谱");
-            } catch (_) {
-              manualJsonEl.value = text;
-              manualJsonEl.select();
-              showToast("已填入编辑框，可手动复制");
-            }
-          });
-          card.querySelector('[data-action="edit"]').addEventListener("click", () => {
-            selectedId = item.id;
-            beginEditSong(item);
-            renderLibrary();
-          });
-          card.querySelector('[data-action="rename"]').addEventListener("click", () => {
-            const nextTitle = prompt("输入新的曲名", item.title);
-            if (!nextTitle || !nextTitle.trim()) return;
-            item.title = nextTitle.trim();
-            saveLibrary();
-            renderLibrary();
-          });
-          card.querySelector('[data-action="delete"]').addEventListener("click", () => {
-            if (library.length === 1) return;
-            stopPlayback();
-            library = library.filter((songItem) => songItem.id !== item.id);
-            selectedId = library[0].id;
-            saveLibrary();
-            renderLibrary();
-          });
-          songListEl.appendChild(card);
+        if (songSelectEl) {
+          songSelectEl.innerHTML = library.map((item) => {
+            const selected = item.id === selectedId ? " selected" : "";
+            return `<option value="${escapeHtml(item.id)}"${selected}>${escapeHtml(item.title)}</option>`;
+          }).join("");
+        }
+        if (songMetaEl) {
+          songMetaEl.textContent = `${song.events.length} 个按键 · ${songDuration(song).toFixed(1)} 秒`;
         }
         renderScore(song);
         renderJianpu(song);
+        updateScoreEditButtons();
+        if (playing) {
+          const current = [...playbackVoices.keys()].sort((a, b) => a - b)[0];
+          if (current != null) highlightScoreLine(current);
+        }
       }
 
       function jianpuToken(event) {
@@ -2165,6 +3020,26 @@
         return { text: `${sharp}${event.note || keyMap.get(event.key)?.note || event.key}`, high, low };
       }
 
+      function eventGap(song, index) {
+        const event = song?.events[index];
+        const next = song?.events[index + 1];
+        if (!event || !next) return 0;
+        return next.t - (event.t + event.d);
+      }
+
+      function shiftTail(events, fromIndex, delta) {
+        if (!delta) return;
+        for (let i = fromIndex; i < events.length; i += 1) {
+          events[i].t = Math.max(0, Number((events[i].t + delta).toFixed(3)));
+        }
+      }
+
+      function parseSeconds(raw) {
+        const value = Number(String(raw).replace(/s$/i, "").trim());
+        if (!Number.isFinite(value)) throw new Error(`不能识别时间：${raw}`);
+        return value;
+      }
+
       function renderJianpu(song) {
         jianpuPreviewEl.innerHTML = "";
         song.events.forEach((event, index) => {
@@ -2172,37 +3047,75 @@
           const span = document.createElement("span");
           span.className = `jianpu-note${token.high ? " high" : ""}${token.low ? " low" : ""}`;
           span.dataset.index = String(index);
+          span.title = "点击从此处播放";
           span.textContent = token.text;
           jianpuPreviewEl.appendChild(span);
           jianpuPreviewEl.append(" ");
+          const gap = eventGap(song, index);
+          if (gap >= 0.12) {
+            const rest = document.createElement("span");
+            rest.className = "jianpu-rest";
+            rest.dataset.after = String(index);
+            rest.title = `停顿 ${gap.toFixed(2)} 秒 · 点击从此处播放`;
+            rest.textContent = "0";
+            jianpuPreviewEl.appendChild(rest);
+            jianpuPreviewEl.append(" ");
+          }
         });
       }
 
       function renderScore(song) {
         scorePreviewEl.innerHTML = "";
+        scorePreviewEl.classList.toggle("editing", scoreEditing);
+        const freeze = document.createElement("div");
+        freeze.className = "score-freeze";
+        const head = document.createElement("div");
+        head.className = "score-head";
+        ["起点", "音", "键", "升降", "时长", "后停"].forEach((label) => {
+          const cell = document.createElement("span");
+          cell.className = label === "后停" ? "score-head-cell gap" : "score-head-cell";
+          cell.textContent = label;
+          head.appendChild(cell);
+        });
+        freeze.append(head);
+        scorePreviewEl.appendChild(freeze);
         song.events.forEach((event, index) => {
+          const gap = eventGap(song, index);
+          const last = index === song.events.length - 1;
           const row = document.createElement("div");
           row.className = "score-line";
           row.dataset.index = String(index);
+          row.title = scoreEditing ? "点格子改谱。改时长或后停，后面整段会跟着挪" : "先点上方「编辑」再改格子";
+          if (index === selectedScoreIndex) row.classList.add("selected");
+          row.addEventListener("pointerdown", () => {
+            setSelectedScoreIndex(index, { syncJianpu: true });
+          });
           row.append(
             scoreCell(index, "t", `${event.t.toFixed(3)}s`),
             scoreCell(index, "note", event.note || keyMap.get(event.key)?.note || event.key),
             scoreCell(index, "key", event.key),
             scoreCell(index, "mouse", (event.mouse || []).join("+") || "原调"),
-            scoreCell(index, "d", `${event.d.toFixed(3)}s`)
+            scoreCell(index, "d", `${event.d.toFixed(3)}s`),
+            last ? scoreCell(index, "gap", "—", { editable: false }) : scoreCell(index, "gap", `${gap.toFixed(3)}s`, { overlap: gap < -0.001 })
           );
           scorePreviewEl.appendChild(row);
         });
       }
 
-      function scoreCell(index, field, value) {
+      function scoreCell(index, field, value, options = {}) {
         const cell = document.createElement("span");
-        cell.className = "score-cell";
+        cell.className = `score-cell${options.overlap ? " overlap" : ""}`;
         cell.dataset.index = String(index);
         cell.dataset.field = field;
-        cell.contentEditable = "true";
+        const editable = scoreEditing && options.editable !== false;
+        cell.contentEditable = editable ? "true" : "false";
         cell.spellcheck = false;
         cell.textContent = value;
+        if (field === "gap") cell.title = "后面的空白停顿，改大后整段后移";
+        if (!editable) return cell;
+        cell.addEventListener("pointerdown", () => {
+          if (playing) stopPlayback();
+        });
         cell.addEventListener("keydown", (event) => {
           if (event.key === "Enter") {
             event.preventDefault();
@@ -2233,35 +3146,63 @@
         if (!event) return;
         const raw = cell.textContent.trim();
         try {
-          if (field === "t") event.t = Math.max(0, Number(raw.replace(/s$/i, "")));
-          if (field === "d") event.d = Math.max(0.06, Number(raw.replace(/s$/i, "")));
-          if (field === "key") {
+          if (field === "t") {
+            const nextT = Math.max(0, parseSeconds(raw));
+            const delta = nextT - event.t;
+            if (Math.abs(delta) < 0.0005) return;
+            event.t = nextT;
+            shiftTail(song.events, index + 1, delta);
+          } else if (field === "d") {
+            const nextD = Math.max(0.06, parseSeconds(raw));
+            const delta = nextD - event.d;
+            if (Math.abs(delta) < 0.0005) return;
+            event.d = nextD;
+            shiftTail(song.events, index + 1, delta);
+          } else if (field === "gap") {
+            const nextGap = Math.max(0, parseSeconds(raw));
+            const delta = nextGap - eventGap(song, index);
+            if (Math.abs(delta) < 0.0005) return;
+            shiftTail(song.events, index + 1, delta);
+          } else if (field === "key") {
             const key = raw.toLowerCase();
             if (!keyMap.has(key)) throw new Error(`不能识别按键：${raw}`);
             event.key = key;
             event.note = keyMap.get(key).note;
-          }
-          if (field === "note") {
+          } else if (field === "note") {
             const match = notes.find((note) => note.note === raw);
             if (!match) throw new Error(`不能识别音符：${raw}`);
             event.note = match.note;
             event.key = match.key;
-          }
-          if (field === "mouse") event.mouse = parseMouseText(raw);
+          } else if (field === "mouse") event.mouse = parseMouseText(raw);
           song.events = normalizeEvents(song.events);
+          const nextIndex = Math.min(index, song.events.length - 1);
+          if (scoreEditing) {
+            renderScore(song);
+            renderJianpu(song);
+            setSelectedScoreIndex(nextIndex);
+            highlightScoreLine(nextIndex);
+            return;
+          }
           saveLibrary();
           renderLibrary();
-          highlightScoreLine(Math.min(index, song.events.length - 1));
+          setSelectedScoreIndex(nextIndex);
+          highlightScoreLine(nextIndex);
         } catch (error) {
           alert(`修改失败：${error.message}`);
           renderScore(song);
         }
       }
 
-      function highlightScoreLine(index) {
+      function clearJianpuActive() {
         scorePreviewEl.querySelector(".score-line.active")?.classList.remove("active");
         jianpuPreviewEl.querySelector(".jianpu-note.active")?.classList.remove("active");
-        const row = scorePreviewEl.querySelector(`[data-index="${index}"]`);
+        jianpuPreviewEl.querySelector(".jianpu-rest.active")?.classList.remove("active");
+      }
+
+      function highlightScoreLine(index) {
+        lastHighlightKey = `n${index}`;
+        clearJianpuActive();
+        const row = scorePreviewEl.querySelector(`.score-line[data-index="${index}"]`);
         const token = jianpuPreviewEl.querySelector(`.jianpu-note[data-index="${index}"]`);
         if (row) {
           row.classList.add("active");
@@ -2273,9 +3214,61 @@
         }
       }
 
+      function highlightRest(afterIndex) {
+        lastHighlightKey = `r${afterIndex}`;
+        clearJianpuActive();
+        const row = scorePreviewEl.querySelector(`.score-line[data-index="${afterIndex}"]`);
+        const token = jianpuPreviewEl.querySelector(`.jianpu-rest[data-after="${afterIndex}"]`);
+        if (row) {
+          row.classList.add("active");
+          row.scrollIntoView({ block: "nearest" });
+        }
+        if (token) {
+          token.classList.add("active");
+          token.scrollIntoView({ inline: "nearest", block: "nearest" });
+        }
+      }
+
+      function highlightPlayhead(time) {
+        const song = selectedSong();
+        if (!song?.events.length) return;
+        let noteIndex = -1;
+        let restAfter = -1;
+        for (let i = 0; i < song.events.length; i += 1) {
+          const event = song.events[i];
+          const end = event.t + event.d;
+          const gap = eventGap(song, i);
+          if (gap >= 0.12 && time >= end && time < end + gap) {
+            restAfter = i;
+            break;
+          }
+          if (time >= event.t && time < end) {
+            noteIndex = i;
+            break;
+          }
+        }
+        const key = restAfter >= 0 ? `r${restAfter}` : `n${noteIndex >= 0 ? noteIndex : ""}`;
+        if (restAfter >= 0) {
+          if (key !== lastHighlightKey) highlightRest(restAfter);
+          return;
+        }
+        if (noteIndex < 0) {
+          noteIndex = song.events.findIndex((event) => event.t + event.d > time);
+          if (noteIndex < 0) noteIndex = song.events.length - 1;
+        }
+        if (`n${noteIndex}` !== lastHighlightKey) highlightScoreLine(noteIndex);
+      }
+
+      function currentPlayhead() {
+        if (playing && playbackStart) {
+          return Math.max(0, ((performance.now() - playbackStart) / 1000) * speed);
+        }
+        return pausedPlayhead;
+      }
+
       function clearScoreHighlight() {
-        scorePreviewEl.querySelector(".score-line.active")?.classList.remove("active");
-        jianpuPreviewEl.querySelector(".jianpu-note.active")?.classList.remove("active");
+        lastHighlightKey = "";
+        clearJianpuActive();
       }
 
       function escapeHtml(value) {
@@ -2289,17 +3282,33 @@
       }
 
       function stopPlayback(options = {}) {
+        if (!options.keepPracticeCapture && !options.restarting) {
+          syncPracticeCapture(false);
+          if (!isCoachWindow) window.koufengqin?.overlayCommand?.("stop");
+          overlayPracticeActive = false;
+        }
+        if (recording && !options.keepRecording) stopRecording();
         if (!options.keepAutoplay && window.koufengqin?.stopAutoplay) window.koufengqin.stopAutoplay();
-        if (!options.keepAutoplay) autoplaying = false;
+        if (!options.keepAutoplay) {
+          autoplaying = false;
+          autoplayingPaused = false;
+          autoplaySongId = "";
+        }
         timers.forEach((timer) => clearTimeout(timer));
         timers = [];
         clearInterval(progressTimer);
         progressTimer = null;
-        cancelAnimationFrame(coachRaf);
+        if (!options.keepAutoplay) stopAutoplayClock();
+        else cancelAnimationFrame(coachRaf);
+        coachRaf = 0;
         coaching = false;
         practiceScroll = null;
         if (isCoachWindow && !options.restarting) setCoachPlayhead(0, "空格开始");
         playing = false;
+        if (!options.keepPaused) {
+          playbackPaused = false;
+          pausedPlayhead = 0;
+        }
         practicing = false;
         practiceAwaitRelease = false;
         practiceHeld = null;
@@ -2307,7 +3316,7 @@
         if (!options.restarting) progressBar.style.width = "0%";
         clearScoreHighlight();
         clearHints();
-        document.querySelectorAll(".jianpu-note.done").forEach((el) => el.classList.remove("done"));
+        document.querySelectorAll(".jianpu-note.done, .jianpu-rest.done").forEach((el) => el.classList.remove("done"));
         for (const [index, voice] of [...playbackVoices.entries()]) {
           fadeVoice(voice);
           refreshKeyVisual(voice.note.key);
@@ -2321,6 +3330,7 @@
           });
         }
         if (!options.keepMouse) setMouseList([]);
+        if (isCoachWindow && !options.restarting) reportPracticeState();
         updateStatus();
       }
 
@@ -2343,6 +3353,7 @@
         progressBar.style.width = `${Math.min(100, (practiceIndex / Math.max(1, total)) * 100)}%`;
         setCoachPlayhead(event.t);
         setCoachMsg(`按 ${hintText(event)}`);
+        reportPracticeState();
         updateStatus();
       }
 
@@ -2367,13 +3378,15 @@
           progressBar.style.width = "100%";
           clearHints();
           setCoachPlayhead(songDuration(song), "结束");
-          showToast(`跟弹完成：对 ${practiceHits}，错 ${practiceMisses}`);
+          showToast(`练习完成：对 ${practiceHits}，错 ${practiceMisses}`);
           if (shouldLoop) {
             startPractice({ restarting: true, silent: isCoachWindow });
             return;
           }
           practicing = false;
           stopBtn.disabled = true;
+          if (isCoachWindow) syncPracticeCapture(false);
+          reportPracticeState();
           updateStatus();
           return;
         }
@@ -2416,6 +3429,7 @@
           flashWrong(key, sharp);
           if (isCoachWindow) setCoachMsg(`不是 ${key.toUpperCase()}，要按 ${hintText(event)}`);
         }
+        reportPracticeState();
         updateStatus();
       }
 
@@ -2440,7 +3454,9 @@
         practiceHeld = null;
         practiceScroll = null;
         showPracticeHint();
-        if (!options.restarting && !options.silent) showToast("跟弹开始：按高亮的键");
+        if (isCoachWindow) syncPracticeCapture(true);
+        if (!options.restarting && !options.silent) showToast("练习开始：按对的音键往下走");
+        reportPracticeState();
       }
 
       function startPlaybackVoice(index, event) {
@@ -2468,41 +3484,111 @@
           if (event) setMouseList(event.mouse || []);
         } else if (playing) {
           setMouseList([]);
+          highlightPlayhead(currentPlayhead());
         }
         updateStatus();
       }
 
-      async function playSong() {
+      function pausePlayback() {
+        if (!playing) return;
+        pausedPlayhead = currentPlayhead();
+        playbackPaused = true;
+        timers.forEach((timer) => clearTimeout(timer));
+        timers = [];
+        clearInterval(progressTimer);
+        progressTimer = null;
+        playing = false;
+        for (const [index, voice] of [...playbackVoices.entries()]) {
+          fadeVoice(voice);
+          refreshKeyVisual(voice.note.key);
+          playbackVoices.delete(index);
+        }
+        setMouseList([]);
+        highlightPlayhead(pausedPlayhead);
+        stopBtn.disabled = false;
+        showToast("已暂停，空格继续");
+        updateStatus();
+      }
+
+      function togglePlaybackPause() {
+        if (playing) {
+          pausePlayback();
+          return;
+        }
+        if (playbackPaused) {
+          playSong(pausedPlayhead);
+          return;
+        }
+        playSong();
+      }
+
+      function playSongFromIndex(index) {
+        const song = selectedSong();
+        const event = song?.events[index];
+        if (!event) return;
+        setSelectedScoreIndex(index);
+        highlightScoreLine(index);
+        return playSong(event.t);
+      }
+
+      async function playSong(fromTime = 0) {
         const song = selectedSong();
         if (!song) return;
+        const duration = songDuration(song);
+        const startAt = typeof fromTime === "number" && Number.isFinite(fromTime)
+          ? Math.min(Math.max(0, fromTime), duration)
+          : 0;
         stopPlayback({ restarting: true, keepLiveKeys: true });
         await enableAudio();
         playing = true;
+        playbackPaused = false;
         stopBtn.disabled = false;
-        playbackStart = performance.now();
-        playbackEnd = songDuration(song) / speed;
+        playbackStart = performance.now() - (startAt / speed) * 1000;
+        playbackEnd = duration / speed;
+        const startMs = (startAt / speed) * 1000;
         for (const [index, event] of song.events.entries()) {
+          const onMs = (event.t / speed) * 1000;
+          const offMs = ((event.t + event.d) / speed) * 1000;
+          if (offMs <= startMs) {
+            jianpuPreviewEl.querySelector(`.jianpu-note[data-index="${index}"]`)?.classList.add("done");
+            const passedGap = eventGap(song, index);
+            if (passedGap >= 0.12 && event.t + event.d + passedGap <= startAt) {
+              jianpuPreviewEl.querySelector(`.jianpu-rest[data-after="${index}"]`)?.classList.add("done");
+            }
+            continue;
+          }
+          if (onMs <= startMs) {
+            startPlaybackVoice(index, event);
+            timers.push(setTimeout(() => {
+              if (!playing) return;
+              stopPlaybackVoice(index);
+            }, offMs - startMs));
+            continue;
+          }
           timers.push(setTimeout(() => {
             if (!playing) return;
             startPlaybackVoice(index, event);
-          }, (event.t / speed) * 1000));
+          }, onMs - startMs));
           timers.push(setTimeout(() => {
             if (!playing) return;
             stopPlaybackVoice(index);
-          }, ((event.t + event.d) / speed) * 1000));
+          }, offMs - startMs));
         }
+        highlightPlayhead(startAt);
+        progressBar.style.width = duration ? `${Math.min(100, (startAt / duration) * 100)}%` : "0%";
         progressTimer = setInterval(() => {
           const elapsed = (performance.now() - playbackStart) / 1000;
           progressBar.style.width = `${Math.min(100, (elapsed / playbackEnd) * 100)}%`;
+          highlightPlayhead(elapsed * speed);
         }, 80);
         timers.push(setTimeout(() => {
           if (!playing) return;
           if (shouldLoop) {
-            playSong();
+            playSong(0);
             return;
           }
           stopPlayback();
-        }, (playbackEnd + 0.12) * 1000));
+        }, (playbackEnd - startAt / speed + 0.12) * 1000));
       }
 
       function normalizeEvents(events) {
@@ -2523,18 +3609,76 @@
       }
 
       function addSong(title, events, source) {
-        const clean = normalizeEvents(events);
-        const song = {
-          id: `song-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          title: title.trim() || "未命名曲目",
-          source,
-          createdAt: new Date().toISOString().slice(0, 10),
-          events: clean
-        };
-        library.unshift(song);
-        selectedId = song.id;
+        mergeIncomingSongs([{ title, events, source: source || "手动导入" }]);
+      }
+
+      function parsePastedLibrary(raw) {
+        const text = String(raw || "").trim();
+        if (!text) throw new Error("先把 Agent 生成的 JSON 贴进来");
+        if (text.startsWith("#") || text.startsWith("---") || text.includes("三角洲口琴谱制作")) {
+          throw new Error("这是给 Agent 的提示词。请把 Agent 返回的 JSON 贴到「导入 JSON」");
+        }
+        const data = JSON.parse(text);
+        if (Array.isArray(data) && data[0] && data[0].events) return data;
+        if (Array.isArray(data) && data[0] && data[0].t != null) {
+          return [{ title: manualTitleEl.value.trim() || "未命名曲目", events: data, source: "手动导入" }];
+        }
+        if (data && Array.isArray(data.library)) return data.library;
+        if (data && Array.isArray(data.events)) return [data];
+        throw new Error("无法识别。请贴软件导出的曲库 JSON，或一首歌，或事件数组");
+      }
+
+      function mergeIncomingSongs(incoming, options = {}) {
+        if (!Array.isArray(incoming) || !incoming.length) throw new Error("没有可导入的曲");
+        const normalized = incoming.map((song, index) => ({
+          id: song.id || `song-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`,
+          title: (manualTitleEl.value.trim() && incoming.length === 1 ? manualTitleEl.value.trim() : song.title) || "未命名曲目",
+          source: song.source || "曲库导入",
+          createdAt: song.createdAt || new Date().toISOString().slice(0, 10),
+          events: normalizeEvents(song.events || [])
+        }));
+        const byId = new Map(library.map((song) => [song.id, song]));
+        for (const song of normalized.slice().reverse()) {
+          byId.delete(song.id);
+        }
+        library = [...normalized, ...byId.values()];
+        selectedId = normalized[0].id;
         saveLibrary();
         renderLibrary();
+        const names = normalized.map((song) => `《${song.title}》`).join("、");
+        if (!options.silent) showToast(`已导入${names}，不用重启`);
+        return normalized;
+      }
+
+      async function reloadProjectSongs() {
+        let incoming = null;
+        if (window.koufengqin?.readImportedSongs) {
+          incoming = await window.koufengqin.readImportedSongs();
+        } else {
+          const res = await fetch(`library/imported-songs.js?t=${Date.now()}`);
+          const text = await res.text();
+          const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
+          if (!match) throw new Error("读不到项目曲库");
+          incoming = JSON.parse(match[1]);
+        }
+        mergeIncomingSongs(incoming, { silent: true });
+        showToast(`已刷新项目曲库（${incoming.length} 首），不用重启`);
+      }
+
+      async function loadAgentSkill() {
+        if (!agentSkillEl) return;
+        try {
+          const res = await fetch(`library/score-agent-prompt.md?t=${Date.now()}`);
+          if (!res.ok) throw new Error("missing");
+          agentSkillEl.value = await res.text();
+        } catch (_) {
+          agentSkillEl.value = `# 三角洲口琴谱制作（口风琴模拟）
+
+把用户给的简谱图转成可导入 JSON。只输出 JSON。
+
+中音 1-7 = z x c v b n m；高音=右键+音键；高音1用逗号、不要 right；低音=左键；半音=中键。
+事件 {t,d,key,note,mouse}。输出 {app:"口风琴模拟",version:1,library:[{id,title,source,createdAt,events}]}。`;
+        }
       }
 
       function beginEditSong(song) {
@@ -2587,196 +3731,94 @@
       }
 
       async function importLibraryFile(file) {
-        const data = JSON.parse(await file.text());
-        const incoming = Array.isArray(data) ? data : data.library;
-        if (!Array.isArray(incoming)) throw new Error("文件里没有曲库数组");
-        const normalized = incoming.map((song) => ({
-          id: song.id || `song-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          title: song.title || "未命名曲目",
-          source: song.source || "曲库导入",
-          createdAt: song.createdAt || new Date().toISOString().slice(0, 10),
-          events: normalizeEvents(song.events || [])
-        }));
-        const byId = new Map(library.map((song) => [song.id, song]));
-        for (const song of normalized) byId.set(song.id, song);
-        library = [...byId.values()];
-        selectedId = normalized[0]?.id || selectedId;
-        saveLibrary();
+        mergeIncomingSongs(parsePastedLibrary(await file.text()));
+      }
+
+      function currentTheme() {
+        return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        const next = theme === "dark" ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        document.documentElement.style.colorScheme = next;
+        localStorage.setItem(THEME_KEY, next);
+        if (themeToggleBtn) {
+          themeToggleBtn.textContent = next === "dark" ? "浅色" : "深色";
+          themeToggleBtn.setAttribute("aria-label", next === "dark" ? "切换到浅色" : "切换到深色");
+        }
+      }
+
+      applyTheme(localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light");
+      themeToggleBtn?.addEventListener("click", () => {
+        applyTheme(currentTheme() === "dark" ? "light" : "dark");
+      });
+
+      songSelectEl?.addEventListener("change", () => {
+        selectedId = songSelectEl.value;
         renderLibrary();
-      }
-
-      function noteFromMidi(midi) {
-        let best = null;
-        for (const octave of [-12, 0, 12]) {
-          for (let i = 0; i < playableDegrees.length; i += 1) {
-            for (const half of [0, 1]) {
-              const mapped = 60 + octave + playableDegrees[i] + half;
-              const cost = Math.abs(mapped - midi) + (half ? 0.12 : 0);
-              if (!best || cost < best.cost) best = { cost, index: i, octave, half };
-            }
+      });
+      songActionsEl?.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-action]");
+        const item = selectedSong();
+        if (!button || !item) return;
+        const action = button.dataset.action;
+        if (action === "play") playSong();
+        else if (action === "edit") beginEditSong(item);
+        else if (action === "rename") beginRename(item);
+        else if (action === "copy") {
+          const text = JSON.stringify(item.events, null, 2);
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("已复制按键谱");
+          } catch (_) {
+            manualJsonEl.value = text;
+            manualJsonEl.select();
+            showToast("已填入编辑框，可手动复制");
           }
+        } else if (action === "delete") {
+          if (library.length === 1) return;
+          stopPlayback();
+          library = library.filter((songItem) => songItem.id !== item.id);
+          selectedId = library[0].id;
+          saveLibrary();
+          renderLibrary();
         }
-        const mouseList = [];
-        if (best.octave < 0) mouseList.push("left");
-        if (best.octave > 0) mouseList.push("right");
-        if (best.half) mouseList.push("middle");
-        return { key: degreeToKey[best.index], note: degreeToNote[best.index], mouse: mouseList };
-      }
-
-      function downsampleChannel(channel, sr, target = 11025) {
-        const ratio = sr / target;
-        if (ratio < 1.15) return { samples: channel, sr };
-        const n = Math.floor(channel.length / ratio);
-        const samples = new Float32Array(n);
-        for (let i = 0; i < n; i += 1) samples[i] = channel[Math.floor(i * ratio)];
-        return { samples, sr: target };
-      }
-
-      function highpassSamples(samples, sr, hz = 170) {
-        const rc = 1 / (2 * Math.PI * hz);
-        const dt = 1 / sr;
-        const a = rc / (rc + dt);
-        const out = new Float32Array(samples.length);
-        let prevX = 0;
-        let prevY = 0;
-        for (let i = 0; i < samples.length; i += 1) {
-          prevY = a * (prevY + samples[i] - prevX);
-          prevX = samples[i];
-          out[i] = prevY;
-        }
-        return out;
-      }
-
-      function rmsOf(frame) {
-        let sum = 0;
-        for (let i = 0; i < frame.length; i += 1) sum += frame[i] * frame[i];
-        return Math.sqrt(sum / Math.max(1, frame.length));
-      }
-
-      function yinHz(frame, sr) {
-        const n = frame.length;
-        if (rmsOf(frame) < 0.012) return null;
-        const tauMax = Math.min(Math.floor(sr / 90), Math.floor(n / 2) - 2);
-        const tauMin = Math.max(2, Math.floor(sr / 980));
-        if (tauMax <= tauMin + 4) return null;
-        const diff = new Float32Array(tauMax + 1);
-        for (let tau = tauMin; tau <= tauMax; tau += 1) {
-          let sum = 0;
-          for (let i = 0; i < n - tau; i += 2) {
-            const delta = frame[i] - frame[i + tau];
-            sum += delta * delta;
-          }
-          diff[tau] = sum;
-        }
-        let running = 0;
-        let bestTau = -1;
-        let bestCmnd = 1;
-        for (let tau = 1; tau <= tauMax; tau += 1) {
-          running += diff[tau];
-          const cmnd = diff[tau] * tau / Math.max(running, 1e-12);
-          if (tau >= tauMin && cmnd < bestCmnd) {
-            bestCmnd = cmnd;
-            bestTau = tau;
-          }
-          if (tau >= tauMin && cmnd < 0.14) {
-            while (tau + 1 <= tauMax) {
-              const next = diff[tau + 1] * (tau + 1) / Math.max(running + diff[tau + 1], 1e-12);
-              if (next >= cmnd) break;
-              tau += 1;
-              running += diff[tau];
-              bestTau = tau;
-              bestCmnd = next;
-            }
-            break;
-          }
-        }
-        if (bestTau < tauMin || bestCmnd > 0.26) return null;
-        return sr / bestTau;
-      }
-
-      function median3(values, index) {
-        const a = values[index - 1] ?? values[index];
-        const b = values[index];
-        const c = values[index + 1] ?? values[index];
-        return [a, b, c].filter((item) => item != null).sort((x, y) => x - y).at(1) ?? b;
-      }
-
-      async function analyzeAudioFile(file) {
-        const ctx = ensureAudio();
-        analysisStatus.textContent = "正在读取音乐文件...";
-        const buffer = await ctx.decodeAudioData(await file.arrayBuffer());
-        const mixed = new Float32Array(buffer.length);
-        if (buffer.numberOfChannels > 1) {
-          const left = buffer.getChannelData(0);
-          const right = buffer.getChannelData(1);
-          for (let i = 0; i < mixed.length; i += 1) mixed[i] = (left[i] + right[i]) * 0.5;
-        } else {
-          mixed.set(buffer.getChannelData(0));
-        }
-        const down = downsampleChannel(mixed, buffer.sampleRate, 11025);
-        const samples = highpassSamples(down.samples, down.sr, 180);
-        const sr = down.sr;
-        const hop = 256;
-        const size = 1024;
-        const track = [];
-        analysisStatus.textContent = "正在识别主旋律...";
-        for (let start = 0, i = 0; start + size < samples.length; start += hop, i += 1) {
-          if (i % 40 === 0) {
-            analysisStatus.textContent = `正在识别主旋律... ${Math.min(99, Math.round((start / samples.length) * 100))}%`;
-            await new Promise((resolve) => setTimeout(resolve, 0));
-          }
-          const frame = samples.subarray(start, start + size);
-          const hz = yinHz(frame, sr);
-          const t = start / sr;
-          if (!hz) {
-            track.push({ t, midi: null, rms: rmsOf(frame) });
-            continue;
-          }
-          let folded = hz;
-          while (folded < 130) folded *= 2;
-          while (folded > 980) folded /= 2;
-          track.push({ t, midi: 69 + 12 * Math.log2(folded / 440), rms: rmsOf(frame) });
-        }
-        const voicedRms = track.filter((item) => item.midi != null).map((item) => item.rms).sort((a, b) => a - b);
-        const gate = voicedRms.length ? voicedRms[Math.floor(voicedRms.length * 0.28)] * 0.72 : 0.02;
-        const midis = track.map((item) => (item.midi != null && item.rms >= gate ? item.midi : null));
-        const smoothed = midis.map((midi, index) => (midi == null ? null : median3(midis, index)));
-        const raw = [];
-        for (let i = 0; i < smoothed.length; i += 1) {
-          const midi = smoothed[i];
-          if (midi == null) continue;
-          let rounded = Math.round(midi);
-          while (rounded > 84) rounded -= 12;
-          while (rounded < 48) rounded += 12;
-          const t = track[i].t;
-          const prev = raw[raw.length - 1];
-          if (prev && prev.midi === rounded && t - (prev.t + prev.d) < 0.08) {
-            prev.d = Number((t + hop / sr - prev.t).toFixed(3));
-          } else {
-            raw.push({ t: Number(t.toFixed(3)), d: Number((hop / sr).toFixed(3)), midi: rounded });
-          }
-        }
-        const merged = [];
-        for (const event of raw) {
-          if (event.d < 0.07 && merged.length) {
-            continue;
-          }
-          const mapped = noteFromMidi(event.midi);
-          const prev = merged[merged.length - 1];
-          if (prev && prev.key === mapped.key && JSON.stringify(prev.mouse) === JSON.stringify(mapped.mouse) && event.t - (prev.t + prev.d) < 0.09) {
-            prev.d = Number((event.t + event.d - prev.t).toFixed(3));
-          } else {
-            merged.push({ t: event.t, d: Math.max(0.09, event.d), ...mapped });
-          }
-        }
-        if (!merged.length) throw new Error("没有识别到可用旋律");
-        const shift = merged[0].t;
-        return merged.map((event) => ({ ...event, t: Number((event.t - shift).toFixed(3)) }));
-      }
+      });
 
       enableAudioBtn.addEventListener("click", enableAudio);
-      playSelectedBtn.addEventListener("click", playSong);
-      practiceSelectedBtn.addEventListener("click", () => startPractice());
+      playSelectedBtn.addEventListener("click", () => playSong());
+      recordSongBtn?.addEventListener("click", () => startRecording());
+      jianpuPreviewEl.addEventListener("click", (event) => {
+        const rest = event.target.closest(".jianpu-rest");
+        if (rest) {
+          const song = selectedSong();
+          const after = Number(rest.dataset.after);
+          const item = song?.events[after];
+          if (!item) return;
+          setSelectedScoreIndex(after);
+          highlightRest(after);
+          playSong(Number((item.t + item.d + 0.02).toFixed(3)));
+          return;
+        }
+        const note = event.target.closest(".jianpu-note");
+        if (!note) return;
+        playSongFromIndex(Number(note.dataset.index));
+      });
+      progressTrack.addEventListener("click", (event) => {
+        const song = selectedSong();
+        if (!song) return;
+        const rect = progressTrack.getBoundingClientRect();
+        const ratio = rect.width ? Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)) : 0;
+        playSong(songDuration(song) * ratio);
+      });
+      drillSelectedBtn?.addEventListener("click", () => startDrillFromMain());
+      setPracticeSound(practiceSoundOn, false);
+      practiceSoundEl?.addEventListener("change", () => setPracticeSound(practiceSoundEl.checked));
+      coachSoundBtn?.addEventListener("click", () => setPracticeSound(!practiceSoundOn));
+      window.addEventListener("storage", (event) => {
+        if (event.key === PRACTICE_SOUND_KEY) setPracticeSound(event.newValue !== "0", false);
+      });
       autoplaySelectedBtn.addEventListener("click", () => startAutoplay());
       openCoachBtn.addEventListener("click", openCoachWindow);
       stopBtn.addEventListener("click", stopPlayback);
@@ -2794,37 +3836,76 @@
       loopPlayEl.addEventListener("change", () => {
         shouldLoop = loopPlayEl.checked;
       });
+      document.querySelectorAll("[data-scene]").forEach((button) => {
+        button.addEventListener("click", () => setPlayScene(button.dataset.scene));
+      });
+      setPlayScene(playScene);
+      if (humanizePlayEl) {
+        humanizePlayEl.checked = localStorage.getItem(HUMANIZE_KEY) !== "0";
+        humanizePlayEl.addEventListener("change", () => {
+          localStorage.setItem(HUMANIZE_KEY, humanizePlayEl.checked ? "1" : "0");
+        });
+      }
+      if (latencyMsEl) {
+        const savedLatency = Number(localStorage.getItem(LATENCY_KEY));
+        if (Number.isFinite(savedLatency) && savedLatency >= 0) latencyMsEl.value = String(Math.min(200, savedLatency));
+        latencyMsEl.addEventListener("change", () => {
+          const next = Math.max(0, Math.min(200, Number(latencyMsEl.value) || 0));
+          latencyMsEl.value = String(next);
+          localStorage.setItem(LATENCY_KEY, String(next));
+        });
+      }
       volumeEl.value = String(Math.round(volume * 100));
       volumeEl.addEventListener("input", () => setVolume(Number(volumeEl.value) / 100));
 
-      analyzeBtn.addEventListener("click", async () => {
-        const file = audioFileEl.files?.[0];
-        if (!file) {
-          analysisStatus.textContent = "先选择一个音乐文件。";
-          return;
-        }
-        analyzeBtn.disabled = true;
-        try {
-          const events = await analyzeAudioFile(file);
-          addSong(audioTitleEl.value || file.name.replace(/\.[^.]+$/, ""), events, `浏览器自动分析：${file.name}`);
-          analysisStatus.textContent = `已加入曲库：${events.length} 个按键事件。`;
-        } catch (error) {
-          analysisStatus.textContent = `分析失败：${error.message}`;
-        } finally {
-          analyzeBtn.disabled = false;
-        }
-      });
-
       importManualBtn.addEventListener("click", () => {
         try {
-          const events = JSON.parse(manualJsonEl.value);
-          addSong(manualTitleEl.value, events, "手动导入");
+          mergeIncomingSongs(parsePastedLibrary(manualJsonEl.value));
           manualJsonEl.value = "";
+          manualTitleEl.value = "";
           if (editingSongId) cancelEditSong();
         } catch (error) {
           alert(`导入失败：${error.message}`);
         }
       });
+      editScoreBtn?.addEventListener("click", () => {
+        if (scoreEditing) {
+          abandonScoreEdit();
+          renderLibrary();
+          showToast("已取消音表修改");
+          return;
+        }
+        beginScoreEdit();
+      });
+      saveScoreBtn?.addEventListener("click", () => saveScoreEdit());
+      insertScoreRowBtn?.addEventListener("click", () => insertScoreRowAbove());
+      deleteScoreRowBtn?.addEventListener("click", () => deleteSelectedScoreRow());
+      copyAgentSkillBtn?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(agentSkillEl.value);
+          copyAgentSkillBtn.textContent = "已复制";
+          setTimeout(() => {
+            copyAgentSkillBtn.textContent = "复制提示词";
+          }, 1200);
+        } catch (_) {
+          agentSkillEl.focus();
+          agentSkillEl.select();
+          showToast("复制失败，请手动全选复制");
+        }
+      });
+      reloadImportedBtn?.addEventListener("click", async () => {
+        try {
+          await reloadProjectSongs();
+        } catch (error) {
+          alert(`刷新失败：${error.message}`);
+        }
+      });
+      if (window.koufengqin?.onImportedSongsChanged) {
+        window.koufengqin.onImportedSongsChanged(() => {
+          reloadProjectSongs().catch((error) => showToast(`刷新失败：${error.message}`));
+        });
+      }
+      loadAgentSkill();
       saveManualEditBtn.addEventListener("click", () => {
         try {
           saveEditedSong();
@@ -2851,9 +3932,20 @@
       window.addEventListener("contextmenu", (event) => {
         if (isCoachWindow || pad.contains(event.target)) event.preventDefault();
       });
+      const ignoreMouseUp = new Set();
       window.addEventListener("mousedown", (event) => {
         if (playing && !practicing) return;
         if (isCoachWindow) {
+          event.preventDefault();
+          return;
+        }
+        if (event.target instanceof Element && event.target.closest(".note-key, .black-key")) return;
+        const latch = event.target instanceof Element ? event.target.closest(".mouse-state") : null;
+        if (latch) {
+          const name = latch.dataset.mouse;
+          const button = name === "left" ? 0 : name === "middle" ? 1 : 2;
+          setMouseButton(button, !mouse[name]);
+          ignoreMouseUp.add(event.button);
           event.preventDefault();
           return;
         }
@@ -2862,6 +3954,10 @@
       });
       window.addEventListener("mouseup", (event) => {
         if (playing && !practicing) return;
+        if (ignoreMouseUp.has(event.button)) {
+          ignoreMouseUp.delete(event.button);
+          return;
+        }
         setMouseButton(event.button, false);
       });
       window.addEventListener("keydown", (event) => {
@@ -2880,15 +3976,17 @@
           const key = keyFromEvent(event);
           if (!key || event.repeat) return;
           event.preventDefault();
-          if (!practicing && !coaching) setCoachMsg("先点练习，再按键");
+          if (!practicing && !autoplaying) setCoachMsg("练习已自动开始，或点代按");
           press(key);
           return;
         }
         if (isTypingTarget(event.target)) return;
         if (event.code === "Space") {
           event.preventDefault();
-          if (playing || practicing || coaching || autoplaying) stopPlayback();
-          else if (event.shiftKey) startPractice();
+          if (recording) stopRecording();
+          else if (playing || playbackPaused) togglePlaybackPause();
+          else if (practicing || coaching || autoplaying) stopPlayback();
+          else if (event.shiftKey) startDrillFromMain();
           else playSong();
           return;
         }
@@ -2905,6 +4003,11 @@
         release(key);
       });
       window.addEventListener("blur", () => {
+        if (recording) {
+          for (const [voiceKey, hold] of [...recordHolds.entries()]) {
+            onRecordRelease(hold.key, voiceKey.startsWith("#"));
+          }
+        }
         [...active.keys()].forEach((voiceKey) => {
           const key = voiceKey.startsWith("#") ? voiceKey.slice(1) : voiceKey;
           stopVoice(voiceKey);
@@ -2916,24 +4019,58 @@
       renderKeys();
       renderLibrary();
       updateStatus();
+      noticeOkBtn?.addEventListener("click", hideNoticeDialog);
+      openNoticeBtn?.addEventListener("click", showNoticeDialog);
+      if (!isCoachWindow && localStorage.getItem(NOTICE_KEY) !== "1") showNoticeDialog();
+      window.koufengqin?.onInstrumentKey?.((data) => {
+        if (isCoachWindow) {
+          if (data.type === "keyDown") press(data.key);
+          else if (data.type === "keyUp") release(data.key);
+          return;
+        }
+        if (!practicing && !overlayPracticeActive) return;
+        if (data.type === "keyDown") {
+          if (practiceSoundOn) playPracticePreview(data.key);
+          return;
+        }
+        if (data.type === "keyUp" && active.has(data.key)) {
+          stopVoice(data.key);
+          refreshKeyVisual(data.key);
+        }
+      });
+      window.koufengqin?.onPracticeState?.(applyPracticeState);
+      window.koufengqin?.onOverlayCommand?.((cmd) => {
+        if (!isCoachWindow) return;
+        if (cmd === "stop" || cmd?.cmd === "stop") stopPlayback();
+      });
+      window.koufengqin?.onOverlayMode?.((data) => {
+        if (!isCoachWindow || !data) return;
+        setCoachMode(data.mode === "autoplay" ? "autoplay" : "practice", Boolean(data.start));
+      });
       if (isCoachWindow) {
         document.documentElement.classList.add("coach-mode");
         document.body.classList.add("coach-mode");
         const songId = coachParams.get("song");
         if (songId && library.some((song) => song.id === songId)) selectedId = songId;
-        setCoachMode(coachParams.get("mode") || "follow", false);
+        const initialMode = coachParams.get("mode") === "autoplay" ? "autoplay" : "practice";
+        const shouldStart = coachParams.get("start") === "1";
+        setCoachMode(initialMode, shouldStart);
         buildCoachTracks(selectedSong());
-        setCoachPlayhead(0, "空格开始");
+        if (!shouldStart) setCoachPlayhead(0, initialMode === "practice" ? "点练习或按空格" : "空格开始");
         bindCoachResize();
-        window.koufengqin?.onInstrumentKey?.((data) => {
-          if (data.type === "keyDown") press(data.key);
-          else if (data.type === "keyUp") release(data.key);
-        });
         window.addEventListener("pointerdown", () => {
           if (!autoplaying) window.focus();
         });
+        window.koufengqin?.autoplayStatus?.().then((state) => {
+          if (state && state.phase !== "idle") handleAutoplayState(state);
+        });
+        window.koufengqin?.onOverlaySong?.(applyOverlaySong);
       }
       window.koufengqin?.onAutoplayState?.(handleAutoplayState);
+      window.addEventListener("beforeunload", flushImportedSongs);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") flushImportedSongs();
+      });
     })();
   </script>
 </body>

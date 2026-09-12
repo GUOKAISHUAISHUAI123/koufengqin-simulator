@@ -14,6 +14,22 @@ const KEY_SCAN = {
   q: 0x10
 };
 
+const WIN_VK = {
+  z: 0x5a,
+  x: 0x58,
+  c: 0x43,
+  v: 0x56,
+  b: 0x42,
+  n: 0x4e,
+  m: 0x4d,
+  ",": 0xbc,
+  q: 0x51,
+  "/": 0xbf,
+  "?": 0xbf,
+  f8: 0x77,
+  f9: 0x78
+};
+
 const MAC_KEYCODE = {
   z: 6,
   x: 7,
@@ -23,7 +39,11 @@ const MAC_KEYCODE = {
   n: 45,
   m: 46,
   ",": 43,
-  q: 12
+  q: 12,
+  "/": 44,
+  "?": 44,
+  f8: 100,
+  f9: 101
 };
 
 const INPUT_MOUSE = 0;
@@ -85,7 +105,8 @@ function loadWin() {
   });
   winApi = {
     INPUT,
-    SendInput: user32.func("uint SendInput(uint, INPUT*, int)")
+    SendInput: user32.func("uint SendInput(uint, INPUT*, int)"),
+    GetAsyncKeyState: user32.func("int16 GetAsyncKeyState(int)")
   };
   return winApi;
 }
@@ -101,6 +122,7 @@ function loadMac() {
   macApi = {
     CGPoint,
     CGEventSourceCreate: cg.func("void* CGEventSourceCreate(uint32)"),
+    CGEventSourceKeyState: cg.func("bool CGEventSourceKeyState(uint32, uint16)"),
     CGEventCreate: cg.func("void* CGEventCreate(void*)"),
     CGEventGetLocation: cg.func("CGPoint CGEventGetLocation(void*)"),
     CGEventCreateKeyboardEvent: cg.func("void* CGEventCreateKeyboardEvent(void*, uint16, bool)"),
@@ -190,6 +212,21 @@ function sendMacMouse(button, up) {
   if (source) api.CFRelease(source);
 }
 
+function isKeyDown(key) {
+  const name = String(key).toLowerCase();
+  if (process.platform === "win32") {
+    const vk = WIN_VK[name];
+    if (vk == null) return false;
+    return (loadWin().GetAsyncKeyState(vk) & 0x8000) !== 0;
+  }
+  if (process.platform === "darwin") {
+    const code = MAC_KEYCODE[name];
+    if (code == null) return false;
+    return Boolean(loadMac().CGEventSourceKeyState(kCGEventSourceStateHIDSystemState, code));
+  }
+  return false;
+}
+
 function pressKey(key) {
   if (process.platform === "win32") sendWinKey(key, false);
   else if (process.platform === "darwin") sendMacKey(key, false);
@@ -237,4 +274,4 @@ function dispatch(event) {
   else releaseMouse(event.key);
 }
 
-module.exports = { dispatch, panicRelease, pressKey, releaseKey };
+module.exports = { dispatch, panicRelease, pressKey, releaseKey, isKeyDown };
