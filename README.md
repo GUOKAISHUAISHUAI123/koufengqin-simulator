@@ -6,9 +6,10 @@
 
 ## 直接用
 
-- **Windows**：在本机执行 `npm run pack:win`，双击生成的 `dist/口琴模拟器.exe`。第一次会请求管理员权限。
+- **Windows 下载 exe**：[Releases 里的 口琴模拟器.exe](https://github.com/GUOKAISHUAISHUAI123/koufengqin-simulator/releases/latest)（仓库 `dist/口琴模拟器.exe` 也有同一份）。双击即可，第一次会请求管理员权限。
 - **开发**：`npm install` 后 `npm start`。
 - **只看界面**：用浏览器打开 `index.html`（跟谱悬浮窗和代按必须走 Electron）。
+- 自己重新打包：`npm run pack:win`。
 
 打开后默认选中《成都》。曲库已自带 12 首（成都、离人赋、歌唱祖国、金玉良缘等），不用再导入。
 
