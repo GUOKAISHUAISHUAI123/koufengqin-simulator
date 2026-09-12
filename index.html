@@ -1520,10 +1520,11 @@
     </div>
   </div>
 
-  <script src="library/imported-songs.js?v=ok-defaults"></script>
+  <script src="library/imported-songs.js?v=chengdu-first"></script>
   <script>
     (() => {
       const STORAGE_KEY = "koufengqin-simulator-library-v1";
+      const DEFAULT_SONG_ID = "chengdu-score-beat-grid-86bpm-20260912-v1";
       const builtInSongs = Array.isArray(window.koufengqinImportedSongs) ? window.koufengqinImportedSongs.slice() : [];
 
       const notes = [
@@ -1641,7 +1642,7 @@
       let noiseBuffer = null;
       let masterGain = null;
       let library = loadLibrary();
-      let selectedId = library[0]?.id || "";
+      let selectedId = library.find((song) => song.id === DEFAULT_SONG_ID)?.id || library[0]?.id || "";
       let scoreEditing = false;
       let scoreEditSongId = "";
       let scoreSnapshot = null;
@@ -1712,6 +1713,15 @@
         return Boolean(el);
       }
 
+      function preferDefaultSong(list) {
+        const idx = list.findIndex((song) => song.id === DEFAULT_SONG_ID);
+        if (idx <= 0) return list;
+        const next = list.slice();
+        const [song] = next.splice(idx, 1);
+        next.unshift(song);
+        return next;
+      }
+
       function loadLibrary() {
         try {
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -1727,11 +1737,12 @@
               if (retiredSongIds.includes(builtIn.id)) continue;
               if (!migrated.some((song) => song.id === builtIn.id)) migrated.unshift(builtIn);
             }
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-            return migrated;
+            const ordered = preferDefaultSong(migrated);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(ordered));
+            return ordered;
           }
         } catch (_) {}
-        return builtInSongs.slice();
+        return preferDefaultSong(builtInSongs.slice());
       }
 
       function saveLibrary() {
