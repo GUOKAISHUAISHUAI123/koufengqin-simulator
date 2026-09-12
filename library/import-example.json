@@ -1,0 +1,19 @@
+{
+  "app": "口风琴模拟",
+  "version": 1,
+  "exportedAt": "2026-09-12T00:00:00.000Z",
+  "library": [
+    {
+      "id": "example-format-demo",
+      "title": "导入格式示例（可删）",
+      "source": "格式示意，不是正式曲。导入曲库后可删除。",
+      "createdAt": "2026-09-12",
+      "events": [
+        { "t": 0, "d": 0.4, "key": "z", "note": "1", "mouse": [] },
+        { "t": 0.5, "d": 0.4, "key": "b", "note": "5", "mouse": ["left"] },
+        { "t": 1, "d": 0.4, "key": "z", "note": "1", "mouse": ["right"] },
+        { "t": 1.5, "d": 0.8, "key": "c", "note": "3", "mouse": ["middle"] }
+      ]
+    }
+  ]
+}
