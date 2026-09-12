@@ -1,12 +1,14 @@
 {
   "name": "koufengqin-simulator",
-  "productName": "口风琴模拟",
+  "productName": "口琴模拟器",
   "version": "1.0.0",
-  "description": "口风琴模拟与透明跟谱窗",
+  "description": "口琴模拟、透明跟谱与自动模拟键鼠弹奏",
   "main": "electron/main.cjs",
   "scripts": {
     "start": "electron .",
-    "pack:mac": "electron-builder --mac dir"
+    "pack:mac": "electron-builder --mac dir",
+    "pack:win": "electron-builder --win portable --x64",
+    "pack:win:dir": "electron-builder --win dir --x64"
   },
   "author": "",
   "license": "MIT",
@@ -16,13 +18,13 @@
   },
   "build": {
     "appId": "local.koufengqin.simulator",
-    "productName": "口风琴模拟",
+    "productName": "口琴模拟器",
+    "forceCodeSigning": false,
     "files": [
       "index.html",
       "electron/**",
       "library/**",
-      "AGENTS.md",
-      "README.md",
+      "package.json",
       "node_modules/koffi/**"
     ],
     "asarUnpack": [
@@ -37,6 +39,19 @@
         "dir"
       ],
       "identity": null
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}.${ext}",
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "portable": {
+      "artifactName": "口琴模拟器.exe"
     }
   },
   "allowScripts": {
