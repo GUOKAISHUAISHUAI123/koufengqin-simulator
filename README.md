@@ -6,7 +6,7 @@
 
 ## 直接用
 
-- **Windows 下载 exe**：打开 [Releases](https://github.com/GUOKAISHUAISHUAI123/koufengqin-simulator/releases/latest) 下载 `kouqin-simulator.exe`（就是口琴模拟器，约 80MB）。双击即可，第一次会请求管理员权限。
+- **Windows 下载 exe**：打开 [Releases](https://github.com/GUOKAISHUAISHUAI123/koufengqin-simulator/releases/latest) 下载 `kouqin-simulator.exe`（就是口琴模拟器，约 80MB），双击即可。若目标窗口本身是管理员运行，再右键 exe 选「以管理员身份运行」。
 - **开发**：`npm install` 后 `npm start`。
 - **只看界面**：用浏览器打开 `index.html`（跟谱悬浮窗和代按必须走 Electron）。
 - 自己重新打包：`npm run pack:win`。
