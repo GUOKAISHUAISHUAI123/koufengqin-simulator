@@ -48,7 +48,7 @@
         }
       ],
       "artifactName": "${productName}.${ext}",
-      "requestedExecutionLevel": "requireAdministrator"
+      "requestedExecutionLevel": "asInvoker"
     },
     "portable": {
       "artifactName": "口琴模拟器.exe"
