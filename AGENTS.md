@@ -61,10 +61,10 @@ npm start
 ```
 
 - Mac 打包：`npm run pack:mac` → `dist/mac` 或 `dist/mac-arm64`。`.npmrc` 里有 electron 镜像。
-- **Windows 打 exe 还没做**：`package.json` 只有 `pack:mac`。回家任务就是加 `electron-builder --win`（nsis 或 portable），在真机测代按后再打包。
-- `koffi` 必须进 asarUnpack（已写）。`files` 白名单不要漏掉 `library/**`（若打包后要自带曲库 JSON）。
+- **Windows 打 exe**：`npm run pack:win` → `dist/口琴模拟器.exe`（portable，双击就能用，首次会 UAC 提权）。GitHub 超时就靠 `.npmrc` 里的 `electron_builder_binaries_mirror`。`npm run pack:win:dir` 出 `dist/win-unpacked`。`koffi` 必须进 asarUnpack。`library/**` 打进包，空 localStorage 也会从 `library/imported-songs.js` 带出曲库。
+- 游戏以管理员运行时，exe 也必须管理员（打包已写 `requireAdministrator`），否则 UIPI 丢掉按键。
 
-内置三首写在 `index.html` 的 `builtInSongs`。第四首「歌唱祖国（自动识别版）」只在 `library/default-library.json`。换电脑后 localStorage 是空的，点「导入曲库」选该 JSON。用户在本机后来导入/分析的曲 **没有** 进 git，除非再导出。
+曲库默认来自 `library/imported-songs.js`（打包后复制到 `userData` 可写）。`library/default-library.json` 仍可手动导入。用户在本机后来导入/分析的曲 **没有** 进 git，除非再导出。
 
 ## 当前进度与已知坑
 
@@ -73,7 +73,7 @@ npm start
 未完成 / 未验证：
 
 1. **Windows 实机代按**（`koffi` 的 `INPUT` 结构体对齐 40 字节问题可能导致 SendInput 静默失败，要用记事本或游戏试 Z）。  
-2. **Windows 打包 exe**、管理员清单、开机不抢焦点。  
+2. **Windows 实机双击 `dist/口琴模拟器.exe`** 验证曲库、练习热键、代按 `/` 与 F9。  
 3. 本机 `git push` 曾因 Git 智能 HTTP 超时失败，代码是用 GitHub **Contents/Git Data API** 推上去的；换网络后普通 `git push` 可能又可用。远程 SHA 与本地 commit 不一定相同，内容以 GitHub `main` 为准。  
 4. GitHub 登录用过精细化 PAT；新仓库要加入 token 的仓库名单才有写权限。  
 5. 不要把 token 写进 git。
