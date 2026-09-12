@@ -20,10 +20,13 @@
     "appId": "local.koufengqin.simulator",
     "productName": "口琴模拟器",
     "forceCodeSigning": false,
+    "icon": "build/icon.png",
     "files": [
       "index.html",
       "electron/**",
       "library/**",
+      "build/icon.png",
+      "build/icon.ico",
       "package.json",
       "node_modules/koffi/**"
     ],
@@ -34,6 +37,7 @@
       "output": "dist"
     },
     "mac": {
+      "icon": "build/icon.png",
       "category": "public.app-category.music",
       "target": [
         "dir"
@@ -41,6 +45,7 @@
       "identity": null
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "portable",
