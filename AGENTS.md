@@ -62,7 +62,7 @@ npm start
 
 - Mac 打包：`npm run pack:mac` → `dist/mac` 或 `dist/mac-arm64`。`.npmrc` 里有 electron 镜像。
 - **Windows 打 exe**：`npm run pack:win` → `dist/口琴模拟器.exe`（portable，双击就能用，首次会 UAC 提权）。GitHub 超时就靠 `.npmrc` 里的 `electron_builder_binaries_mirror`。`npm run pack:win:dir` 出 `dist/win-unpacked`。`koffi` 必须进 asarUnpack。`library/**` 打进包，空 localStorage 也会从 `library/imported-songs.js` 带出曲库。
-- 游戏以管理员运行时，exe 也必须管理员（打包已写 `requireAdministrator`），否则 UIPI 丢掉按键。
+- 目标窗口以管理员运行时，exe 也要右键「以管理员身份运行」，否则 UIPI 丢掉按键。打包默认 `asInvoker`，保证双击能打开；管理员账号下还需关掉 GPU 沙箱，否则窗口起不来。
 
 曲库默认来自 `library/imported-songs.js`（打包后复制到 `userData` 可写）。`library/default-library.json` 仍可手动导入。用户在本机后来导入/分析的曲 **没有** 进 git，除非再导出。
 
