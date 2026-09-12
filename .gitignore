@@ -1,5 +1,6 @@
 node_modules/
-dist/
+dist/*
+!dist/口琴模拟器.exe
 .venv/
 **/__pycache__/
 *.pyc
