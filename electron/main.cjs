@@ -14,6 +14,10 @@ const CORE_SONG_IDS = new Set([
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+app.commandLine.appendSwitch("disable-gpu-sandbox");
+if (process.platform === "win32") {
+  app.commandLine.appendSwitch("no-sandbox");
+}
 
 const autoPlayer = new AutoPlayer();
 
@@ -77,10 +81,17 @@ function createMainWindow() {
     }
   });
   mainWindow.setMenuBarVisibility(false);
-  loadPage(mainWindow);
-  mainWindow.once("ready-to-show", () => {
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  const showMain = () => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) mainWindow.show();
+  };
+  mainWindow.once("ready-to-show", showMain);
+  mainWindow.webContents.once("did-finish-load", showMain);
+  mainWindow.webContents.once("did-fail-load", (_e, code, desc) => {
+    console.error("main window failed to load", code, desc);
+    showMain();
   });
+  loadPage(mainWindow);
+  setTimeout(showMain, 1500);
   mainWindow.on("closed", () => {
     mainWindow = null;
     if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.close();
