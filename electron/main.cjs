@@ -58,6 +58,14 @@ function overlayOptions() {
   };
 }
 
+function appIcon() {
+  const ico = path.join(__dirname, "..", "build", "icon.ico");
+  const png = path.join(__dirname, "..", "build", "icon.png");
+  if (process.platform === "win32" && fs.existsSync(ico)) return ico;
+  if (fs.existsSync(png)) return png;
+  return undefined;
+}
+
 function loadPage(win, query = {}) {
   const file = path.join(__dirname, "..", "index.html");
   win.loadFile(file, { query });
@@ -70,6 +78,7 @@ function createMainWindow() {
     minWidth: 880,
     minHeight: 640,
     title: "口琴模拟器",
+    icon: appIcon(),
     backgroundColor: "#11161d",
     show: false,
     autoHideMenuBar: true,
