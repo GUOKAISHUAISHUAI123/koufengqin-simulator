@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, globalShortcut, systemPreferences } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, screen, globalShortcut, systemPreferences } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { AutoPlayer } = require("./auto-player.cjs");
@@ -67,6 +67,8 @@ function createMainWindow() {
     minHeight: 640,
     title: "口琴模拟器",
     backgroundColor: "#11161d",
+    show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -74,7 +76,11 @@ function createMainWindow() {
       sandbox: true
     }
   });
+  mainWindow.setMenuBarVisibility(false);
   loadPage(mainWindow);
+  mainWindow.once("ready-to-show", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  });
   mainWindow.on("closed", () => {
     mainWindow = null;
     if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.close();
@@ -257,7 +263,21 @@ function restoreMain() {
   }
 }
 
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+  });
+}
+
 app.whenReady().then(() => {
+  if (!gotTheLock) return;
+  if (process.platform !== "darwin") Menu.setApplicationMenu(null);
+  seedUserLibrary();
   createMainWindow();
   watchImportedSongs();
   app.on("activate", () => {
@@ -504,9 +524,23 @@ ipcMain.handle("autoplay-stop", async () => {
 
 ipcMain.handle("autoplay-status", () => autoPlayer.snapshot());
 
+function bundledLibraryFile() {
+  return path.join(app.getAppPath(), "library", "imported-songs.js");
+}
+
 function importedSongsFile() {
   if (app.isPackaged) return path.join(app.getPath("userData"), "imported-songs.js");
   return path.join(__dirname, "..", "library", "imported-songs.js");
+}
+
+function seedUserLibrary() {
+  if (!app.isPackaged) return;
+  const dest = importedSongsFile();
+  if (fs.existsSync(dest)) return;
+  const src = bundledLibraryFile();
+  if (!fs.existsSync(src)) return;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
 }
 
 function sanitizeImportedSongs(songs) {
@@ -539,11 +573,20 @@ let writingImported = false;
 let importedWatchTimer = null;
 
 function parseImportedSongsFile() {
-  const file = importedSongsFile();
-  const text = fs.readFileSync(file, "utf8");
-  const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
-  if (!match) throw new Error("无法解析项目曲库");
-  return JSON.parse(match[1]);
+  const candidates = [importedSongsFile(), bundledLibraryFile()];
+  let lastError = null;
+  for (const file of candidates) {
+    try {
+      if (!fs.existsSync(file)) continue;
+      const text = fs.readFileSync(file, "utf8");
+      const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
+      if (!match) throw new Error("无法解析项目曲库");
+      return JSON.parse(match[1]);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("读项目曲库失败");
 }
 
 function writeImportedSongs(songs, event) {
