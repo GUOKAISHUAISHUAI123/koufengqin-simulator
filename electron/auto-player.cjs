@@ -276,10 +276,7 @@ class AutoPlayer {
 
   pause() {
     if (this.stopped || this.paused || !this.busy) return false;
-    if (!this.t0) {
-      this.stop();
-      return false;
-    }
+    if (!this.t0) return false;
     this.paused = true;
     this.elapsedOffset = Math.max(0, Date.now() - this.t0);
     this.wakeWait();
