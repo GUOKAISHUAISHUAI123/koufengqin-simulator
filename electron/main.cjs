@@ -95,7 +95,7 @@ function createMainWindow() {
     height: 840,
     minWidth: 880,
     minHeight: 640,
-    title: "口琴模拟器",
+    title: "口琴模拟器 v1.1.0",
     icon: appIcon(),
     backgroundColor: "#11161d",
     show: false,
