@@ -194,6 +194,11 @@
       font-weight: 650;
     }
 
+    .notice-autoplay {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
     .notice-feedback strong {
       color: var(--ink);
       font-weight: 780;
@@ -1362,7 +1367,7 @@
         </button>
         <button class="core-btn core-btn-auto" id="autoplaySelected" type="button">
           <strong>代按</strong>
-          <span>自动模拟键鼠弹奏</span>
+          <span>管理员 + 游戏无边框</span>
         </button>
       </div>
       <div class="header-aside">
@@ -1375,6 +1380,7 @@
       <div class="notices">
         <p class="notice-free">本工具免费开源，只做编程学习交流。要是有人拿它收费，请给卖家一个狠狠的差评。</p>
         <p class="notice-feedback">有优化建议欢迎反馈，抖音号：<strong>wananbakabaka888</strong></p>
+        <p class="notice-autoplay">代按前请以管理员身份运行本工具，游戏开无边框窗口，否则可能没反应。</p>
         <button class="small" id="openNotice" type="button">注意事项</button>
       </div>
     </header>
@@ -1491,7 +1497,8 @@
         <li>指法：中音 Z X C V B N M；高音按住右键（高音 1 直接按逗号）；低音按住左键；半音按中键。</li>
         <li>录制：点「录制」后按本页琴键，再点「结束录制」进曲库。空格或停止也能结束。第一个音算起点。</li>
         <li>练习：透明跟谱按对才前进，只校验音键，不必点悬浮窗。可开「练习声音」听自己按的音。代按：倒计时结束后自动模拟键鼠弹奏（NPC 节奏，结束会按 Q）。</li>
-        <li>代按快捷键：按 / 或 ? 暂停/继续，F9 结束。目标窗口若以管理员运行，本工具也要用管理员开。</li>
+        <li>代按快捷键：按 / 或 ? 暂停/继续，F9 结束。</li>
+        <li>代按前请<strong>以管理员身份运行</strong>本工具，游戏开<strong>无边框窗口</strong>，否则可能没反应或中途失效。</li>
         <li>代按会向系统发送键盘和鼠标。规律按键可能被安全软件判异常，存在风险。不要用于竞技场合。</li>
       </ul>
       <p>本工具免费开源，只做编程学习交流。要是有人拿它收费，请给卖家一个狠狠的差评。有优化建议欢迎反馈，抖音号：wananbakabaka888</p>
@@ -1503,9 +1510,10 @@
   </div>
   <div id="riskDialog" class="dialog-backdrop" hidden>
     <div class="dialog" role="dialog" aria-labelledby="riskTitle" aria-modal="true">
-      <h3 id="riskTitle">代按风险说明</h3>
-      <p>代按会向系统发送键盘和鼠标，倒计时结束后自动模拟键鼠弹奏。规律按键可能被安全软件判异常，存在风险。仅建议在自己电脑、非竞技场合使用。</p>
-      <p>NPC 自动演奏：倒计时结束后按谱自动模拟键鼠弹奏，结束会按 Q。按 / 或 ? 暂停/继续，F9 彻底松开。切走前台窗口会自动暂停。</p>
+      <h3 id="riskTitle">代按前请先确认</h3>
+      <p>请<strong>右键本工具 → 以管理员身份运行</strong>。目标窗口如果也是管理员，不提权会被系统丢掉按键。</p>
+      <p>游戏请开<strong>无边框窗口</strong>，不要用独占全屏，否则跟谱窗和键鼠模拟可能失效。</p>
+      <p>倒计时结束后按谱自动模拟键鼠。按 / 或 ? 暂停/继续，F9 结束并松开全部键鼠。规律按键可能被安全软件判异常，不要用于竞技场合。</p>
       <label class="loop-toggle"><input id="riskAckOnce" type="checkbox"> 本机不再提示</label>
       <div class="dialog-actions">
         <button class="small" id="riskCancel" type="button">取消</button>
@@ -1563,7 +1571,7 @@
       const SCENE_KEY = "koufengqin-autoplay-scene";
       const HUMANIZE_KEY = "koufengqin-autoplay-humanize";
       const LATENCY_KEY = "koufengqin-autoplay-latency";
-      const RISK_KEY = "koufengqin-autoplay-ack";
+      const RISK_KEY = "koufengqin-autoplay-ack-v2";
       const NOTICE_KEY = "koufengqin-notice-ack";
       const THEME_KEY = "koufengqin-theme";
       const PRACTICE_SOUND_KEY = "koufengqin-practice-sound";
@@ -1742,58 +1750,96 @@
         return next;
       }
 
-      function loadLibrary() {
+      function persistLibraryCache() {
         try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-          if (Array.isArray(saved) && saved.length) {
-            const migrated = saved.filter((song) => !retiredSongIds.includes(song.id)).map((song) => {
-              const builtIn = builtInSongs.find((item) => item.id === song.id);
-              if (!builtIn) return song;
-              if (song.source === builtIn.source && song.events?.length === builtIn.events.length) return song;
-              const customTitle = song.title && !song.title.startsWith(builtIn.title.split("（")[0]) ? song.title : builtIn.title;
-              return { ...builtIn, title: customTitle };
-            });
-            for (const builtIn of builtInSongs.slice().reverse()) {
-              if (retiredSongIds.includes(builtIn.id)) continue;
-              if (!migrated.some((song) => song.id === builtIn.id)) migrated.unshift(builtIn);
-            }
-            const ordered = preferDefaultSong(migrated);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(ordered));
-            return ordered;
-          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
         } catch (_) {}
+      }
+
+      function keepSongs(list) {
+        return (Array.isArray(list) ? list : []).filter((song) => song && song.id && !retiredSongIds.includes(song.id));
+      }
+
+      function readDiskLibrary() {
+        if (!window.koufengqin?.readImportedSongsSync) return null;
+        try {
+          const incoming = window.koufengqin.readImportedSongsSync();
+          if (!Array.isArray(incoming)) return null;
+          const next = keepSongs(incoming);
+          return next.length ? next : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function mergeSongLists(base, extra) {
+        const byId = new Map();
+        for (const song of keepSongs(base)) byId.set(song.id, song);
+        for (const song of keepSongs(extra)) byId.set(song.id, song);
+        return [...byId.values()];
+      }
+
+      function loadLibrary() {
+        let local = [];
+        try {
+          local = keepSongs(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+        } catch (_) {}
+        const disk = readDiskLibrary();
+        if (disk && local.length) return preferDefaultSong(mergeSongLists(local, disk));
+        if (disk) return preferDefaultSong(disk);
+        if (local.length) return preferDefaultSong(local);
         return preferDefaultSong(builtInSongs.slice());
       }
 
       function saveLibrary() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
-        queueWriteImportedSongs();
+        persistLibraryCache();
+        flushImportedSongs();
       }
 
       let writeImportedTimer = 0;
 
-      function queueWriteImportedSongs() {
+      function queueWriteImportedSongs(options = {}) {
         if (isCoachWindow || !window.koufengqin?.saveImportedSongs) return;
         clearTimeout(writeImportedTimer);
         writeImportedTimer = setTimeout(() => {
           writeImportedTimer = 0;
-          writeImportedSongs();
-        }, 400);
+          writeImportedSongs(options);
+        }, 120);
       }
 
-      async function writeImportedSongs() {
+      async function writeImportedSongs(options = {}) {
         if (isCoachWindow || !window.koufengqin?.saveImportedSongs) return;
         const result = await window.koufengqin.saveImportedSongs(library);
-        if (result?.ok) showToast(`已写回项目曲库（${result.count} 首）`);
-        else if (result?.error) showToast(`写回失败：${result.error}`);
+        if (result?.ok) {
+          if (!options.silent) showToast(`曲库已保存（${result.count} 首）`);
+        } else if (result?.error) showToast(`曲库保存失败：${result.error}`);
       }
 
       function flushImportedSongs() {
         if (isCoachWindow || !window.koufengqin?.saveImportedSongsSync) return;
-        if (!writeImportedTimer) return;
         clearTimeout(writeImportedTimer);
         writeImportedTimer = 0;
-        window.koufengqin.saveImportedSongsSync(library);
+        const result = window.koufengqin.saveImportedSongsSync(library);
+        if (result && result.ok === false && result.error) showToast(`曲库保存失败：${result.error}`);
+      }
+
+      async function hydrateLibraryFromDisk(options = {}) {
+        if (!window.koufengqin?.readImportedSongs) return false;
+        const incoming = await window.koufengqin.readImportedSongs();
+        if (!Array.isArray(incoming) || !incoming.length) return false;
+        const next = incoming.filter((song) => song && song.id && !retiredSongIds.includes(song.id));
+        if (!next.length) return false;
+        library = preferDefaultSong(mergeSongLists(library, next));
+        if (!isCoachWindow) {
+          persistLibraryCache();
+          if (library.length > next.length) queueWriteImportedSongs({ silent: true });
+        }
+        if (!library.some((song) => song.id === selectedId)) {
+          selectedId = library.find((song) => song.id === DEFAULT_SONG_ID)?.id || library[0]?.id || "";
+        }
+        renderLibrary();
+        if (!options.silent) showToast(`已刷新项目曲库（${library.length} 首），不用重启`);
+        return true;
       }
 
       function ensureAudio() {
@@ -2614,7 +2660,8 @@
       }
 
       function confirmAutoplay() {
-        if (isCoachWindow || localStorage.getItem(RISK_KEY) === "1") return Promise.resolve(true);
+        if (isCoachWindow) return Promise.resolve(true);
+        if (localStorage.getItem(RISK_KEY) === "1") return Promise.resolve(true);
         return new Promise((resolve) => {
           riskDialogEl.hidden = false;
           const finish = (ok) => {
@@ -2636,7 +2683,7 @@
       }
 
       function autoplayHint(state) {
-        if (state?.phase === "countdown") return "倒计时后开始 · / 取消 · F9 结束";
+        if (state?.phase === "countdown") return "管理员运行 + 游戏无边框 · / 取消 · F9 结束";
         if (state?.phase === "paused") return "已暂停 · / 或 ? 继续 · F9 结束";
         return "NPC 代按中 · / 或 ? 暂停 · F9 结束";
       }
@@ -2740,7 +2787,7 @@
           startAutoplayClock(state);
           setCoachMsg(autoplayHint(state));
           modeLabelEl.textContent = "代按倒计时";
-          noteLabelEl.textContent = "3 秒后自动模拟键鼠弹奏";
+          noteLabelEl.textContent = "管理员 + 无边框 · 3 秒后开始";
           return;
         }
         if (state.phase === "playing") {
@@ -2827,7 +2874,7 @@
         autoplaying = true;
         autoplaySongId = song.id;
         stopBtn.disabled = false;
-        showToast("3 秒后开始 NPC 代按，/ 暂停，F9 结束");
+        showToast("请确认已管理员运行，且游戏为无边框。3 秒后开始，/ 暂停，F9 结束");
       }
 
       function startCoach() {
@@ -3682,18 +3729,17 @@
       }
 
       async function reloadProjectSongs() {
-        let incoming = null;
         if (window.koufengqin?.readImportedSongs) {
-          incoming = await window.koufengqin.readImportedSongs();
-        } else {
-          const res = await fetch(`library/imported-songs.js?t=${Date.now()}`);
-          const text = await res.text();
-          const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
-          if (!match) throw new Error("读不到项目曲库");
-          incoming = JSON.parse(match[1]);
+          const ok = await hydrateLibraryFromDisk();
+          if (!ok) throw new Error("读不到项目曲库");
+          return;
         }
-        mergeIncomingSongs(incoming, { silent: true });
-        showToast(`已刷新项目曲库（${incoming.length} 首），不用重启`);
+        const res = await fetch(`library/imported-songs.js?t=${Date.now()}`);
+        const text = await res.text();
+        const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
+        if (!match) throw new Error("读不到项目曲库");
+        mergeIncomingSongs(JSON.parse(match[1]), { silent: true });
+        showToast(`已刷新项目曲库（${library.length} 首），不用重启`);
       }
 
       async function loadAgentSkill() {
@@ -3933,7 +3979,7 @@
       });
       if (window.koufengqin?.onImportedSongsChanged) {
         window.koufengqin.onImportedSongsChanged(() => {
-          reloadProjectSongs().catch((error) => showToast(`刷新失败：${error.message}`));
+          hydrateLibraryFromDisk({ silent: true }).catch(() => {});
         });
       }
       loadAgentSkill();
@@ -4050,6 +4096,7 @@
       renderKeys();
       renderLibrary();
       updateStatus();
+      hydrateLibraryFromDisk({ silent: true }).catch(() => {});
       noticeOkBtn?.addEventListener("click", hideNoticeDialog);
       openNoticeBtn?.addEventListener("click", showNoticeDialog);
       if (!isCoachWindow && localStorage.getItem(NOTICE_KEY) !== "1") showNoticeDialog();
