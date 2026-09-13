@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld("koufengqin", {
   saveImportedSongs: (songs) => ipcRenderer.invoke("save-imported-songs", songs),
   saveImportedSongsSync: (songs) => ipcRenderer.sendSync("save-imported-songs-sync", songs),
   readImportedSongs: () => ipcRenderer.invoke("read-imported-songs"),
+  readImportedSongsSync: () => ipcRenderer.sendSync("read-imported-songs-sync"),
   onImportedSongsChanged: (callback) => {
     ipcRenderer.on("imported-songs-changed", () => callback());
   },
