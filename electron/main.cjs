@@ -3,14 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { AutoPlayer } = require("./auto-player.cjs");
 const inputDriver = require("./input-driver.cjs");
-const focusGuard = require("./focus-guard.cjs");
-
-const CORE_SONG_IDS = new Set([
-  "delta-clip",
-  "gechang-zuguo-auto",
-  "jinyu-liangyuan-image",
-  "taiyang-zhaochang-shengqi"
-]);
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
@@ -19,13 +11,38 @@ if (process.platform === "win32") {
   app.commandLine.appendSwitch("no-sandbox");
 }
 
+function copyFileIfMissing(src, dest) {
+  if (!src || !dest || !fs.existsSync(src) || fs.existsSync(dest)) return;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+}
+
+function pinStableUserData() {
+  try {
+    const stable = path.join(app.getPath("appData"), "koufengqin-simulator");
+    fs.mkdirSync(stable, { recursive: true });
+    const dest = path.join(stable, "imported-songs.js");
+    for (const name of ["koufengqin-simulator", "口琴模拟器"]) {
+      copyFileIfMissing(path.join(app.getPath("appData"), name, "imported-songs.js"), dest);
+    }
+    const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+    if (portableDir) {
+      copyFileIfMissing(path.join(portableDir, "koufengqin-data", "imported-songs.js"), dest);
+    }
+    app.setPath("userData", stable);
+  } catch (error) {
+    console.error("pin userData failed", error);
+  }
+}
+
+pinStableUserData();
+
 const autoPlayer = new AutoPlayer();
 
 let mainWindow = null;
 let overlayWindow = null;
 let overlaySongId = "";
 let focusTimer = null;
-let focusSnap = null;
 let hudTimer = null;
 
 function overlayOptions() {
@@ -53,7 +70,8 @@ function overlayOptions() {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      partition: "persist:koufengqin"
     }
   };
 }
@@ -86,7 +104,8 @@ function createMainWindow() {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      partition: "persist:koufengqin"
     }
   });
   mainWindow.setMenuBarVisibility(false);
@@ -271,8 +290,7 @@ function createOverlayWindow(options = {}) {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send("practice-state", { practicing: false });
     }
-    if (autoPlayer.isActive) abortAutoplay();
-    else restoreMain();
+    if (!autoPlayer.isActive) restoreMain();
   });
   return overlayWindow;
 }
@@ -377,23 +395,13 @@ function stopFocusWatch() {
     clearInterval(focusTimer);
     focusTimer = null;
   }
-  focusSnap = null;
 }
 
 let focusResumeIgnoreUntil = 0;
 
 function startFocusWatch() {
-  if (focusTimer || !focusGuard.supported) return;
-  focusSnap = focusGuard.snapshotForeground();
-  focusTimer = setInterval(() => {
-    if (!autoPlayer.isPlaying) return;
-    if (Date.now() < focusResumeIgnoreUntil) return;
-    const oursFocused = Boolean(
-      mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused() && !mainWindow.isMinimized()
-    );
-    if (!oursFocused && focusGuard.matches(focusSnap)) return;
-    pauseAutoplay();
-  }, 400);
+  // 游戏全屏、反作弊浮层、升降八度的鼠标键都会改前台窗口。
+  // 代按只由 / 暂停、F9 停止，不再因焦点变化自动停。
 }
 
 const autoplayKeyHeld = Object.create(null);
@@ -548,6 +556,20 @@ function bundledLibraryFile() {
   return path.join(app.getAppPath(), "library", "imported-songs.js");
 }
 
+function portableLibraryFile() {
+  const dir = process.env.PORTABLE_EXECUTABLE_DIR;
+  if (!dir) return "";
+  return path.join(dir, "koufengqin-data", "imported-songs.js");
+}
+
+function legacyLibraryFile() {
+  return path.join(app.getPath("appData"), "口琴模拟器", "imported-songs.js");
+}
+
+function libraryJsonFile() {
+  return path.join(app.getPath("userData"), "library.json");
+}
+
 function importedSongsFile() {
   if (app.isPackaged) return path.join(app.getPath("userData"), "imported-songs.js");
   return path.join(__dirname, "..", "library", "imported-songs.js");
@@ -557,8 +579,9 @@ function seedUserLibrary() {
   if (!app.isPackaged) return;
   const dest = importedSongsFile();
   if (fs.existsSync(dest)) return;
-  const src = bundledLibraryFile();
-  if (!fs.existsSync(src)) return;
+  const portable = portableLibraryFile();
+  const src = [portable, legacyLibraryFile(), bundledLibraryFile()].find((file) => file && fs.existsSync(file));
+  if (!src) return;
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(src, dest);
 }
@@ -567,16 +590,15 @@ function sanitizeImportedSongs(songs) {
   if (!Array.isArray(songs)) throw new Error("曲库必须是数组");
   if (songs.length > 400) throw new Error("曲库太多，拒绝写入");
   return songs
-    .filter((song) => song && typeof song === "object" && song.id && !CORE_SONG_IDS.has(String(song.id)))
+    .filter((song) => song && typeof song === "object" && song.id)
     .map((song) => {
       const events = Array.isArray(song.events) ? song.events : [];
-      if (events.length > 20000) throw new Error(`曲目 ${song.id} 事件过多`);
       return {
         id: String(song.id),
         title: String(song.title || "未命名曲目"),
         source: String(song.source || ""),
         createdAt: String(song.createdAt || ""),
-        events: events.map((event) => ({
+        events: events.slice(0, 20000).map((event) => ({
           t: Number(event.t) || 0,
           d: Number(event.d) || 0.2,
           key: String(event.key || "").toLowerCase(),
@@ -592,21 +614,43 @@ function sanitizeImportedSongs(songs) {
 let writingImported = false;
 let importedWatchTimer = null;
 
+function parseLibraryText(text) {
+  const match = String(text || "").match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
+  if (match) return JSON.parse(match[1]);
+  const data = JSON.parse(text);
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.library)) return data.library;
+  throw new Error("无法解析项目曲库");
+}
+
 function parseImportedSongsFile() {
-  const candidates = [importedSongsFile(), bundledLibraryFile()];
+  const candidates = [
+    importedSongsFile(),
+    libraryJsonFile(),
+    portableLibraryFile(),
+    legacyLibraryFile(),
+    bundledLibraryFile()
+  ].filter(Boolean);
   let lastError = null;
   for (const file of candidates) {
     try {
       if (!fs.existsSync(file)) continue;
-      const text = fs.readFileSync(file, "utf8");
-      const match = text.match(/window\.koufengqinImportedSongs\s*=\s*(\[[\s\S]*\])\s*;/);
-      if (!match) throw new Error("无法解析项目曲库");
-      return JSON.parse(match[1]);
+      return parseLibraryText(fs.readFileSync(file, "utf8"));
     } catch (error) {
       lastError = error;
     }
   }
   throw lastError || new Error("读项目曲库失败");
+}
+
+function writeLibraryFile(file, body) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const tmp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, body, "utf8");
+  fs.copyFileSync(tmp, file);
+  try {
+    fs.unlinkSync(tmp);
+  } catch (_) {}
 }
 
 function writeImportedSongs(songs, event) {
@@ -616,13 +660,15 @@ function writeImportedSongs(songs, event) {
   try {
     const clean = sanitizeImportedSongs(songs);
     const file = importedSongsFile();
-    fs.mkdirSync(path.dirname(file), { recursive: true });
     const body = `window.koufengqinImportedSongs = ${JSON.stringify(clean)};\n`;
     writingImported = true;
-    fs.writeFileSync(file, body, "utf8");
+    writeLibraryFile(file, body);
+    writeLibraryFile(libraryJsonFile(), JSON.stringify({ app: "口风琴模拟", version: 1, library: clean }));
+    const portable = portableLibraryFile();
+    if (portable) writeLibraryFile(portable, body);
     setTimeout(() => {
       writingImported = false;
-    }, 400);
+    }, 800);
     return { ok: true, count: clean.length, file };
   } catch (error) {
     writingImported = false;
@@ -655,5 +701,12 @@ ipcMain.handle("read-imported-songs", () => {
     return parseImportedSongsFile();
   } catch (error) {
     throw new Error(error.message || "读项目曲库失败");
+  }
+});
+ipcMain.on("read-imported-songs-sync", (event) => {
+  try {
+    event.returnValue = parseImportedSongsFile();
+  } catch (error) {
+    event.returnValue = { error: error.message || "读项目曲库失败" };
   }
 });
